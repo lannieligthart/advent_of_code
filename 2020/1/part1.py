@@ -1,4 +1,4 @@
-with open('C:/Users/Admin/Documents/Code/advent_of_code/1/testinput.txt') as f:
+with open('testinput.txt') as f:
     input = f.read().splitlines()
     input = [int(i) for i in input]
     input.sort()

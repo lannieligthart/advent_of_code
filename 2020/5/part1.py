@@ -5,7 +5,7 @@
 # L lower
 # R upper
 
-with open('C:/Users/Admin/Documents/Code/advent_of_code/5/input.txt') as f:
+with open('input.txt') as f:
     data = f.read().split("\n")
 
 def get_row_number(bp):
@@ -30,7 +30,9 @@ def get_col_number(bp):
     col = int(min)
     return(col)
 
-def get_seat_id(row, col):
+def get_seat_id(code):
+    row = get_row_number(code)
+    col = get_col_number(code)
     id = row*8 + col
     return id
 
@@ -48,10 +50,10 @@ seat_ids = []
 for bp in data:
     row = get_row_number(bp)
     col  =get_col_number(bp)
-    seat_ids.append(get_seat_id(row, col))
+    seat_ids.append(get_seat_id(bp))
 
 print(max(seat_ids))
 
-
+assert max(seat_ids) == 864
 
 

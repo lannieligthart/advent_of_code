@@ -1,4 +1,4 @@
-with open('C:/Users/Admin/Documents/Code/advent_of_code/3/input.txt') as f:
+with open('input.txt') as f:
     text = f.read().splitlines()
 
 def get_ntrees(down, right, text):

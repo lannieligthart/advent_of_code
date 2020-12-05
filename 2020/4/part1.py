@@ -1,4 +1,4 @@
-with open('C:/Users/Admin/Documents/Code/advent_of_code/4/input.txt') as f:
+with open('input.txt') as f:
     passports = f.read().split("\n\n")
 
 # read passport data into dictionaries

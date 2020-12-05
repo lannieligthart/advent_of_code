@@ -1,6 +1,6 @@
 import re
 
-with open('C:/Users/Admin/Documents/Code/advent_of_code/4/input.txt') as f:
+with open('input.txt') as f:
     passports = f.read().split("\n\n")
 
 
@@ -121,10 +121,11 @@ def validate_passport_strict(passport):
 n_valid_strict = 0
 for p in passports:
     if validate_passport_strict(p):
-        print("Valid!")
+        #print("Valid!")
         n_valid_strict += 1
     elif not validate_passport_strict(p):
-        print("Invalid!")
+        #print("Invalid!")
+        pass
 
 assert(n_valid_strict) == 224
 
