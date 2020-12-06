@@ -4,9 +4,7 @@ with open('C:/Users/Admin/Documents/Code/advent_of_code/2019/2/input.txt') as f:
 for i in range(len(data)):
     data[i] = int(data[i])
 
-# reset
-data[1] = 12
-data[2] = 2
+
 
 print(data)
 # 0 - opcode (1 = add, 2 = multiply, 99 = stop)
@@ -24,21 +22,23 @@ def multiply_ints(ints, data):
     data[ints[3]] = product
     print("inserted", product, "at position", ints[3])
 
-pos = 0
+def run_intcode(data, value1, value2):
+    tmp_data = data.copy()
+    tmp_data[1] = value1
+    tmp_data[2] = value2
+    pos = 0
+    while True:
+        ints = tmp_data[pos:pos+4]
+        if ints[0] == 99:
+            break
+        elif ints[0] == 1:
+            add_ints(ints, tmp_data)
+        elif ints[0] == 2:
+            multiply_ints(ints, tmp_data)
+        else:
+            print("invalid intcode!")
+            break
+        pos += 4
+    return tmp_data[0]
 
-while True:
-    ints = data[pos:pos+4]
-
-    if ints[0] == 99:
-        break
-    elif ints[0] == 1:
-        add_ints(ints, data)
-    elif ints[0] == 2:
-        multiply_ints(ints, data)
-    else:
-        print("invalid intcode!")
-        break
-    pos += 4
-    print(data)
-
-
+assert run_intcode(data, 12, 2) == 3101878

@@ -19,39 +19,36 @@ def multiply_ints(ints, data):
     data[ints[3]] = product
     #print("inserted", product, "at position", ints[3])
 
-def try_values(val1, val2, input_data):
-    # create a copy of the input data to modify and get the result
-    data = input_data.copy()
-    # reset
+def run_intcode(data, value1, value2):
+    tmp_data = data.copy()
+    tmp_data[1] = value1
+    tmp_data[2] = value2
     pos = 0
-    data[1] = val1
-    data[2] = val2
-
     while True:
-        ints = data[pos:pos+4]
-
+        ints = tmp_data[pos:pos+4]
         if ints[0] == 99:
             break
         elif ints[0] == 1:
-            add_ints(ints, data)
+            add_ints(ints, tmp_data)
+            pos += 4
         elif ints[0] == 2:
-            multiply_ints(ints, data)
+            multiply_ints(ints, tmp_data)
+            pos += 4
         else:
             print("invalid intcode!")
-            break
-        # move to next instruction
-        pos += 4
-
-    result = data[0]
-    return result
+    return tmp_data[0]
 
 def get_verb_and_noun(data):
     for i in range(100):
         for j in range(100):
-            if try_values(i, j, data) == 19690720:
+            if run_intcode(data, i, j) == 19690720:
                 return(100*i + j)
 
-print(get_verb_and_noun(data))
+result = (get_verb_and_noun(data))
+
+assert run_intcode(data, 12, 2) == 3101878
+assert run_intcode(data, 84, 44) == 19690720
+assert result == 8444
 
 
 
