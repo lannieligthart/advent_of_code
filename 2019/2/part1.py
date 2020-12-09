@@ -1,44 +1,74 @@
 with open('C:/Users/Admin/Documents/Code/advent_of_code/2019/2/input.txt') as f:
-    data = f.read().split(",")
+    code = f.read().split(",")
 
-for i in range(len(data)):
-    data[i] = int(data[i])
+for i in range(len(code)):
+    code[i] = int(code[i])
 
-
-
-print(data)
 # 0 - opcode (1 = add, 2 = multiply, 99 = stop)
 # 1 - pos int1
 # 2 - pos int2
 # 3 - position to store result
 
-def add_ints(ints, data):
-    sum = data[ints[1]] + data[ints[2]]
-    data[ints[3]] = sum
-    print("inserted", sum, "at position", ints[3])
+class Intcode():
 
-def multiply_ints(ints, data):
-    product = data[ints[1]] * data[ints[2]]
-    data[ints[3]] = product
-    print("inserted", product, "at position", ints[3])
+    def __init__(self, code, value1=None, value2=None):
+        self.code = code
+        self.pos = 0
+        # start values
+        if value1 is not None:
+            self.code[1] = value1
+        if value2 is not None:
+            self.code[2] = value2
 
-def run_intcode(data, value1, value2):
-    tmp_data = data.copy()
-    tmp_data[1] = value1
-    tmp_data[2] = value2
-    pos = 0
-    while True:
-        ints = tmp_data[pos:pos+4]
-        if ints[0] == 99:
-            break
-        elif ints[0] == 1:
-            add_ints(ints, tmp_data)
-        elif ints[0] == 2:
-            multiply_ints(ints, tmp_data)
-        else:
-            print("invalid intcode!")
-            break
-        pos += 4
-    return tmp_data[0]
+    @property
+    def parameters(self):
+        p1 = None
+        p2 = None
+        p3 = None
+        if self.opcode in [1, 2]:
+            try:
+                p1 = self.code[self.pos + 1]
+                p2 = self.code[self.pos + 2]
+                p3 = self.code[self.pos + 3]
+            except IndexError:
+                pass
+        elif self.opcode == 99:
+            pass
+        pars = (p1, p2, p3)
+        return pars
 
-assert run_intcode(data, 12, 2) == 3101878
+    @property
+    def opcode(self):
+        return self.code[self.pos]
+
+    def add(self):
+        # opcode 1
+        target = self.parameters[2]
+        summed = self.code[self.parameters[0]] + self.code[self.parameters[1]]
+        self.code[target] = summed
+        print("inserted", summed, "at position", target)
+        self.pos += 4
+
+    def multiply(self):
+        # opcode 2
+        target = self.parameters[2]
+        product = self.code[self.parameters[0]] * self.code[self.parameters[1]]
+        self.code[target] = product
+        print("inserted", product, "at position", target)
+        self.pos += 4
+
+    def run(self):
+        while True:
+            if self.opcode == 99:
+                print(self.code[0])
+                return self.code[0]
+            elif self.opcode == 1:
+                self.add()
+            elif self.opcode == 2:
+                self.multiply()
+            else:
+                raise ValueError("invalid opcode!")
+                return None
+
+program = Intcode(code, 12, 2)
+assert program.run() == 3101878
