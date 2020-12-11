@@ -11,14 +11,9 @@ for i in range(len(code)):
 
 class Intcode():
 
-    def __init__(self, code, value1=None, value2=None):
+    def __init__(self, code):
         self.code = code
-        self.pos = 0
-        # start values
-        if value1 is not None:
-            self.code[1] = value1
-        if value2 is not None:
-            self.code[2] = value2
+        self.pointer = 0
 
     @property
     def parameters(self):
@@ -27,9 +22,9 @@ class Intcode():
         p3 = None
         if self.opcode in [1, 2]:
             try:
-                p1 = self.code[self.pos + 1]
-                p2 = self.code[self.pos + 2]
-                p3 = self.code[self.pos + 3]
+                p1 = self.code[self.pointer + 1]
+                p2 = self.code[self.pointer + 2]
+                p3 = self.code[self.pointer + 3]
             except IndexError:
                 pass
         elif self.opcode == 99:
@@ -39,7 +34,7 @@ class Intcode():
 
     @property
     def opcode(self):
-        return self.code[self.pos]
+        return self.code[self.pointer]
 
     def add(self):
         # opcode 1
@@ -47,7 +42,7 @@ class Intcode():
         summed = self.code[self.parameters[0]] + self.code[self.parameters[1]]
         self.code[target] = summed
         print("inserted", summed, "at position", target)
-        self.pos += 4
+        self.pointer += 4
 
     def multiply(self):
         # opcode 2
@@ -55,20 +50,24 @@ class Intcode():
         product = self.code[self.parameters[0]] * self.code[self.parameters[1]]
         self.code[target] = product
         print("inserted", product, "at position", target)
-        self.pos += 4
+        self.pointer += 4
 
-    def run(self):
+    def run(self, value1=None, value2=None):
+        # change start values, if necessary
+        if value1 is not None:
+            self.code[1] = value1
+        if value2 is not None:
+            self.code[2] = value2
         while True:
             if self.opcode == 99:
-                print(self.code[0])
                 return self.code[0]
             elif self.opcode == 1:
                 self.add()
             elif self.opcode == 2:
                 self.multiply()
             else:
-                raise ValueError("invalid opcode!")
+                print("invalid opcode!")
                 return None
 
-program = Intcode(code, 12, 2)
-assert program.run() == 3101878
+program = Intcode(code)
+assert program.run(12, 2) == 3101878
