@@ -7,22 +7,39 @@ with open('C:/Users/Admin/Documents/Code/advent_of_code/2020/11/input.txt') as f
 nrows = len(data)
 ncols = len(data[0])
 
+def create_empty_grid():
+    empty_row = []
+    empty_grid = []
+    for i in range(ncols):
+        empty_row.append('.')
+    for j in range(nrows):
+        empty_grid.append(empty_row[:])
+    return empty_grid
+
+def test(r,c):
+    grid = create_empty_grid()
+    directions = get_directions(grid, r, c)
+    for d in directions:
+        for i in d:
+            try:
+                x, y = i
+                grid[x][y] = 'O'
+            except IndexError:
+                print("Index Error", x, y)
+    print(pd.DataFrame(grid))
+
+
 seats = []
-empty_row = ['.'] * (ncols + 2)
-seats.append(empty_row)
 
 for string in data:
     row = []
-    row.append('.')
     for s in string:
         row.append(s)
-    row.append('.')
     seats.append(row)
-seats.append(empty_row)
 
 def get_directions(seats, cur_row, cur_col):
-    max_rows = len(seats[0])-1
-    max_cols = len(seats)-1
+    max_rows = len(seats)
+    max_cols = len(seats[0])
 
     # south
     south = []
@@ -31,7 +48,7 @@ def get_directions(seats, cur_row, cur_col):
 
     # north
     north = []
-    for i in range(cur_row - 1, 0, -1):
+    for i in range(cur_row - 1, -1, -1):
         north.append((i, cur_col))
 
     # east
@@ -44,7 +61,7 @@ def get_directions(seats, cur_row, cur_col):
     # west
     west = []
     col = cur_col - 1
-    while col > 0:
+    while col >= 0:
         west.append((cur_row, col))
         col -= 1
 
@@ -61,7 +78,7 @@ def get_directions(seats, cur_row, cur_col):
     northwest = []
     row = cur_row - 1
     col = cur_col - 1
-    while row > 0 and col > 0:
+    while row >= 0 and col >= 0:
         northwest.append((row,col))
         row -= 1
         col -= 1
@@ -70,7 +87,7 @@ def get_directions(seats, cur_row, cur_col):
     southwest = []
     row = cur_row + 1
     col = cur_col - 1
-    while row < max_rows and col > 0:
+    while row < max_rows and col >= 0:
         southwest.append((row,col))
         row += 1
         col -= 1
@@ -79,7 +96,7 @@ def get_directions(seats, cur_row, cur_col):
     northeast = []
     row = cur_row - 1
     col = cur_col + 1
-    while row > 0 and col < max_cols :
+    while row >= 0 and col < max_cols :
         northeast.append((row,col))
         row -= 1
         col += 1
@@ -105,6 +122,7 @@ def count_surrounding_occupied_seats(seats_copy, directions):
     return(n)
 
 def update_seat(seats, seats_copy, r, c):
+    #test(r,c)
     directions = get_directions(seats, r, c)
     count = count_surrounding_occupied_seats(seats_copy, directions)
     if seats_copy[r][c] == 'L' and count == 0:
@@ -116,33 +134,28 @@ def update_seat(seats, seats_copy, r, c):
 seats_copy = []
 while not seats_copy == seats:
     seats_copy = [x[:] for x in seats]
-    for r in range(1, nrows + 1):
-        for c in range(1, ncols + 1):
-            #print(r, c)
+    for r in range(nrows):
+        for c in range(ncols):
             if seats[r][c] != '.':
                 update_seat(seats, seats_copy, r, c)
     #print(pd.DataFrame(seats))
+    print("\n")
 
 
 def count_occupied_seats(seats):
     n = 0
-    for r in range(1, nrows + 1):
-        for c in range(1, ncols + 1):
+    for r in range(0, nrows):
+        for c in range(0, ncols):
             if seats[r][c] == '#':
                 n += 1
     return(n)
 
 occupied = count_occupied_seats(seats)
+print("finished!")
 print(occupied)
 
+assert occupied == 1955
 
-def test(seats_copy):
-    directions = get_directions(seats_copy, 2, 1)
-    for d in directions:
-        for i in d:
-            x, y = i
-            seats_copy[x][y] = 'O'
 
-    print(pd.DataFrame(seats_copy))
 
     # 1966 too high
