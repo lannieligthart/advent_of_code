@@ -16,84 +16,178 @@
 # opcode 2 (multiply), parameter modes 0, 1, 0
 #
 
-with open('C:/Users/Admin/Documents/Code/advent_of_code/2019/2/input.txt') as f:
-    data = f.read().split(",")
+def parse_code(filename):
+    with open(filename) as f:
+        code = f.read().split(",")
+    for i in range(len(code)):
+        code[i] = int(code[i])
+    return code
 
-for i in range(len(data)):
-    data[i] = int(data[i])
+# 0 - opcode (1 = add, 2 = multiply, 99 = stop)
+# 1 - pos int1
+# 2 - pos int2
+# 3 - position to store result
 
+class Parameter(object):
 
-def read_opcode(input):
-    input = str(input)
-    # last two numbers are the opcode itself (incl. leading zero)
-    opcode = int(input[-2:])
-    if opcode not in [1, 2, 3, 4, 99]:
-        raise ValueError(str(opcode) + " is an invalid opcode!")
-    # opcodes with no parameters:
-    if opcode == 99:
-        if len(input) > 2:
-            raise ValueError("no parameters expected for opcode " + str(opcode))
-        return(opcode)
-    # opcodes with only one parameter:
-    if opcode in [3, 4] and len(input) > 3:
-        raise ValueError("invalid input, expecting only one parameter!")
-    # opcodes with at least one parameter:
-    if opcode in [1, 2, 3, 4]:
-        mode1 = 0
-        # if the input is longer than the opcode (including leading zero),
-        # read in first parameter
-        if len(input) > 2:
-            mode1 = int(input[-3])
-        if opcode in [3, 4]:
-            return (opcode, mode1)
-    # opcodes with 3 parameters
-    if opcode in [1, 2]:
-        mode2 = 0
-        # if the input is longer than the opcode plus first parameter,
-        # read in second parameter
-        if len(input) > 3:
-            mode2 = int(input[-4])
-        mode3 = 0
-        # same for third param
-        if len(input) > 4:
-            mode3 = int(input[-5])
-        return (opcode, mode1, mode2, mode3)
+    def __init__(self, value, mode):
+        self.value = value
+        self.mode = mode
 
-def add_ints(ints, program):
-    sum = program[ints[1]] + program[ints[2]]
-    program[ints[3]] = sum
-    #print("inserted", sum, "at position", ints[3])
-
-def multiply_ints(ints, program):
-    product = program[ints[1]] * program[ints[2]]
-    program[ints[3]] = product
-    #print("inserted", product, "at position", ints[3])
-
-def run_intcode(program, value1=None, value2=None):
-    code = program.copy()
-    #tmp_program[1] = value1
-    #tmp_program[2] = value2
-    pos = 0
-    while True:
-        ints = code[pos:pos+4]
-        if ints[0] == 99:
-            break
-        elif ints[0] == 1:
-            add_ints(ints, code)
-            pos += 4
-        elif ints[0] == 2:
-            multiply_ints(ints, code)
-            pos += 4
+    def __str__(self):
+        if self.value is None:
+            return("None")
         else:
-            raise ValueError("invalid intcode!")
-    return tmp_program[0]
+            return("Value: " + str(self.value) + " Mode:" + str(self.mode))
+
+class Intcode(object):
+
+    def __init__(self, code):
+        # intcode program has code, an copy of the original, unmodified code, and a pointer.
+        self.original_code = code
+        self.code = code.copy()
+        self.pointer = 0
+        self.par1 = Parameter(None, None)
+        self.par2 = Parameter(None, None)
+        self.par3 = Parameter(None, None)
+        self.input = None
+        self.output = []
+
+    def __str__(self):
+        par1 = str(self.par1)
+        par2 = str(self.par2)
+        par3 = str(self.par3)
+
+        string = """
+        opcode: {0}
+        par1: {1}
+        par2: {2}
+        par3: {3}
+        """.format(str(self.opcode), par1, par2, par3)
+        return string
+
+    def read_instruction(self):
+        # method to read the more complex instructions that include paramaters and modes.
+        # until now max 3 parameters are possible so read 4 positions (opcode + pars)
+        # first read opcode to know how many parameters there should be.
+        extended_opcode = str(self.code[self.pointer]).zfill(5)
+        self.opcode = int(extended_opcode[-2:])
+        # opcodes with 3 parameters
+        if self.opcode in [1, 2]:
+            modes = [int(extended_opcode[2]), int(extended_opcode[1]), int(extended_opcode[0])]
+            values = self.code[self.pointer+1:self.pointer+4]
+            self.par1 = Parameter(values[0], modes[0])
+            self.par2 = Parameter(values[1], modes[1])
+            self.par3 = Parameter(values[2], modes[2])
+
+        # opcodes with 1 parameter
+        elif self.opcode in [3, 4]:
+            mode = int(extended_opcode[0])
+            value = self.code[self.pointer+1]
+            self.par1 = Parameter(value, mode)
+            self.par2 = Parameter(None, None)
+            self.par3 = Parameter(None, None)
+
+        # other (for now only 99, which has 0 parameters)
+        else:
+            self.par1 = Parameter(None, None)
+            self.par2 = Parameter(None, None)
+            self.par3 = Parameter(None, None)
+        print(self)
 
 
-assert read_opcode(1002) == (2, 0, 1, 0)
-assert read_opcode(1101) == (1, 1, 1, 0)
-assert read_opcode(103) == (3, 1)
-assert read_opcode(3) == (3, 0)
-#assert read_opcode(11003) == (3, 0)
-assert read_opcode(104) == (4, 1)
-assert read_opcode('004') == (4, 0)
-assert read_opcode(4) == (4, 0)
+    def add(self):
+        # method to be carried out if opcode == 1
+        # uses three parameters to find two values and write their sum to a third position.
+        target = self.par3.value
+        p1 = self.par1.value if self.par1.mode == 1 else self.code[self.par1.value]
+        p2 = self.par2.value if self.par2.mode == 1 else self.code[self.par2.value]
+        summed = p1 + p2
+        print("added", p1, "and", p2)
+        self.code[target] = summed
+        print("inserted", summed, "at position", target)
+        self.pointer += 4
+
+    def multiply(self):
+        # method to be carried out if opcode == 2
+        # uses three parameters to find two values and write their product to a third position.
+        target = self.par3.value
+        # immediate vs position mode
+        p1 = self.par1.value if self.par1.mode == 1 else self.code[self.par1.value]
+        p2 = self.par2.value if self.par2.mode == 1 else self.code[self.par2.value]
+        product = p1 * p2
+        print("multiplied", p1, "by", p2)
+        self.code[target] = product
+        print("inserted", product, "at position", target)
+        self.pointer += 4
+
+    def op3(self):
+        # takes a single integer as input and saves it to the position given by its only parameter.
+        # For example, the instruction 3,50 would take an input value and store it at address 50.
+        self.code[self.par1.value] = self.input
+        print("inserted input value (" + str(self.input) + ") at position " + str(self.par1.value))
+        self.pointer += 2
+
+    def op4(self):
+        # outputs the value of its only parameter.
+        # For example, the instruction 4,50 would output the value at address 50.
+        if self.par1.mode == 0:
+            self.output.append(self.code[self.par1.value])
+        elif self.par1.mode == 1:
+            self.output.append(self.par1.value)
+        print(self.output[-1])
+        self.pointer += 2
+
+
+    def run(self, input=None, value1=None, value2=None, reset=True):
+        # this method runs the program, taking two optional start values as input.
+        # whether or not the state of the intcode program should be preserved can be specified with the reset argument.
+        if value1 is not None:
+            self.code[1] = value1
+        if value2 is not None:
+            self.code[2] = value2
+        self.execute(input=input)
+
+    def execute(self, input=None):
+        self.read_instruction()
+        self.input = input
+        while True:
+            if self.opcode == 1:
+                self.add()
+            elif self.opcode == 2:
+                self.multiply()
+            elif self.opcode == 3:
+                self.op3()
+            elif self.opcode == 4:
+                self.op4()
+            elif self.opcode == 99:
+                return self.code[0]
+            self.read_instruction()
+
+### Parameters that an instruction writes to will never be in immediate mode.
+
+# code_day2 = parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/2/input.txt')
+# day2 = Intcode(code_day2)
+# assert day2.run(12, 2) == 3101878
+
+# code_day2 = parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/testinput2.txt')
+# day2 = Intcode(code_day2)
+# day2.run()
+# print(day2.code)
+
+# testcode_day5 = parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/testinput.txt')
+# day5test = Intcode(testcode_day5)
+# print(day5test.code)
+# assert day5test.code == [1002, 4, 3, 4, 33]
+# day5test.run()
+# print(day5test.code)
+# assert day5test.code == [1002, 4, 3, 4, 99]
+
+
+
+code_day5 = parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/input.txt')
+day5 = Intcode(code_day5)
+#print(day5.code)
+day5.run(input=1)
+assert day5.output[-1] == 14155342
+#print(day5.code)
