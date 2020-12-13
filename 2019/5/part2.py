@@ -28,18 +28,6 @@ def parse_code(filename):
 # 2 - pos int2
 # 3 - position to store result
 
-class Parameter(object):
-
-    def __init__(self, value, mode):
-        self.value = value
-        self.mode = mode
-
-    def __str__(self):
-        if self.value is None:
-            return("None")
-        else:
-            return("Value: " + str(self.value) + " Mode:" + str(self.mode))
-
 class Intcode(object):
 
     def __init__(self, code):
@@ -47,9 +35,9 @@ class Intcode(object):
         self.original_code = code
         self.code = code.copy()
         self.pointer = 0
-        self.par1 = Parameter(None, None)
-        self.par2 = Parameter(None, None)
-        self.par3 = Parameter(None, None)
+        self.par1 = None
+        self.par2 = None
+        self.par3 = None
         self.input = None
         self.output = []
 
@@ -71,32 +59,33 @@ class Intcode(object):
         # until now max 3 parameters are possible so read 4 positions (opcode + pars)
 
         # reset parameter values
-        self.par1 = Parameter(None, None)
-        self.par2 = Parameter(None, None)
-        self.par3 = Parameter(None, None)
+        self.par1 = None
+        self.par2 = None
+        self.par3 = None
 
         # read opcode to know how many parameters there should be.
         extended_opcode = str(self.code[self.pointer]).zfill(5)
         self.opcode = int(extended_opcode[-2:])
 
         # read in new modes and values
+        # 0 = position mode, 1 = value mode
         modes = [int(extended_opcode[2]), int(extended_opcode[1]), int(extended_opcode[0])]
         values = self.code[self.pointer+1:self.pointer+4]
 
         # opcodes with 3 parameters
         if self.opcode in [1, 2, 7, 8]:
-            self.par1 = Parameter(values[0], modes[0])
-            self.par2 = Parameter(values[1], modes[1])
-            self.par3 = Parameter(values[2], modes[2])
+            self.par1 = values[0] if modes[0] == 1 else self.code[values[0]]
+            self.par2 = values[1] if modes[1] == 1 else self.code[values[1]]
+            self.par3 = values[2] if modes[2] == 1 else self.code[values[2]]
 
         # # opcodes with 2 parameters
         elif self.opcode in [5, 6]:
-            self.par1 = Parameter(values[0], modes[0])
-            self.par2 = Parameter(values[1], modes[1])
+            self.par1 = values[0] if modes[0] == 1 else self.code[values[0]]
+            self.par2 = values[1] if modes[1] == 1 else self.code[values[1]]
 
         # opcodes with 1 parameter
         elif self.opcode in [3, 4]:
-            self.par1 = Parameter(values[0], modes[0])
+            self.par1 = values[0] if modes[0] == 1 else self.code[values[0]]
 
         print(self)
 
@@ -104,11 +93,9 @@ class Intcode(object):
     def add(self):
         # method to be carried out if opcode == 1
         # uses three parameters to find two values and write their sum to a third position.
-        target = self.par3.value
-        p1 = self.par1.value if self.par1.mode == 1 else self.code[self.par1.value]
-        p2 = self.par2.value if self.par2.mode == 1 else self.code[self.par2.value]
-        summed = p1 + p2
-        print("added", p1, "and", p2)
+        target = self.par3
+        summed = self.par1 + self.par2
+        print("added", self.par1, "and", self.par2)
         self.code[target] = summed
         print("inserted", summed, "at position", target)
         self.pointer += 4
@@ -116,11 +103,9 @@ class Intcode(object):
     def multiply(self):
         # method to be carried out if opcode == 2
         # uses three parameters to find two values and write their product to a third position.
-        target = self.par3.value
+        target = self.par3
         # immediate vs position mode
-        p1 = self.par1.value if self.par1.mode == 1 else self.code[self.par1.value]
-        p2 = self.par2.value if self.par2.mode == 1 else self.code[self.par2.value]
-        product = p1 * p2
+        product = self.par1 * self.par2
         print("multiplied", p1, "by", p2)
         self.code[target] = product
         print("inserted", product, "at position", target)
@@ -129,17 +114,14 @@ class Intcode(object):
     def op3(self):
         # takes a single integer as input and saves it to the position given by its only parameter.
         # For example, the instruction 3,50 would take an input value and store it at address 50.
-        self.code[self.par1.value] = self.input
-        print("inserted input value (" + str(self.input) + ") at position " + str(self.par1.value))
+        self.code[self.par1] = self.input
+        print("inserted input value (" + str(self.input) + ") at position " + str(self.par1))
         self.pointer += 2
 
     def op4(self):
         # outputs the value of its only parameter.
         # For example, the instruction 4,50 would output the value at address 50.
-        if self.par1.mode == 0:
-            self.output.append(self.code[self.par1.value])
-        elif self.par1.mode == 1:
-            self.output.append(self.par1.value)
+        self.output.append(self.par1)
         print(self.output[-1])
         self.pointer += 2
 
