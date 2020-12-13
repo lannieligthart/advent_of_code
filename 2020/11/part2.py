@@ -155,7 +155,3 @@ print("finished!")
 print(occupied)
 
 assert occupied == 1955
-
-
-
-    # 1966 too high
