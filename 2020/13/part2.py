@@ -1,8 +1,7 @@
-# Didn't solve this one alone...
+
 
 with open('input.txt') as f:
     data = f.read().split("\n")
-
 numbers = data[1].split(",")
 buses = []
 for i in range(len(numbers)):
@@ -36,15 +35,16 @@ class Bus(object):
         return "period: " + str(self.period) + "; offset: " + str(self.offset)
 
     def merge(self, other):
-        offset = None
         n = self.offset
-        while True:
-            if (other.period - n % other.period) == other.offset:
-                if offset is None:
-                    offset = n
-                else:
-                    return Bus(n - offset, offset)
+        departures = []
+        while len(departures) < 2:
+            if n % other.period == other.offset:
+                departures.append(n)
+
             n += self.period
+        offset = departures[0]
+        period = departures[1] - offset
+        return Bus(period, offset)
 
 i = 0
 bus1 = Bus(buses[i], offsets[i])
@@ -53,5 +53,6 @@ for i in range(len(buses)-1):
     bus1 = bus1.merge(bus2)
     print(bus1)
 
+print(bus1.period - bus1.offset)
 
-assert bus1.offset == 471793476184394
+assert bus1.period - bus1.offset == 471793476184394
