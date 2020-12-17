@@ -5,8 +5,6 @@ from functools import reduce
 with open('input.txt') as f:
     data = f.read().split("\n")
 
-print(data)
-
 def parse_rule(rule):
     new_rule = []
     for i in range(len(rule)):
@@ -22,12 +20,13 @@ def parse_ticket(ticket):
     return new_ticket
 
 def extract_rules(data):
-    rules = []
+    rules = {}
     regex = "[0-9]{1,}-[0-9]{1,}"
     for d in data:
         if re.search(regex, d):
-            d = re.findall(regex, d)
-            rules.append(parse_rule(d))
+            fieldname, ranges = d.split(": ")
+            ranges = ranges.split(" or ")
+            rules[fieldname] = parse_rule(ranges)
     return rules
 
 i = 0
@@ -37,8 +36,6 @@ while data[i] != 'nearby tickets:':
 while i < len(data)-1:
     i += 1
     tickets.append(parse_ticket(data[i]))
-print("total n tickets:", len(tickets))
-
 
 def check_rule(number, rule):
     # if number does not fall within either range, it is invalid for this rule
@@ -50,8 +47,8 @@ def check_rule(number, rule):
 def validate_number(number, rules):
     # to be valid, the number should pass at least one rule
     checks = []
-    for rule in rules:
-        checks.append(check_rule(number, rule))
+    for field, ranges in rules.items():
+        checks.append(check_rule(number, ranges))
     # if zero checks are passed, return the number as it is invalid
     if sum(checks) == 0:
         return number
@@ -67,65 +64,45 @@ for t in tickets:
     if len(invalid_numbers) == 0:
         valid_tickets.append(t)
 
-print("valid tickets:", len(valid_tickets))
-
 fields = []
 for d in data:
     if d == '':
         break
     fields.append(d.split(":")[0])
-print(fields)
 
 # loop per rule per veld alle tickets af en check of het veld steeds aan de checks voldoet.
 # als dat niet zo is dan kan de rule niet bij dat veld horen.
 
-possible_fields = []
+possible_fields = {}
 for f in range(len(fields)):
-    possible_fields.append(list(np.arange(0, len(fields))))
+    possible_fields[fields[f]] = list(np.arange(0, len(fields)))
 
-for f in range(len(fields)):
-    for i in range(len(rules)):
-        errors = []
-        for t in valid_tickets:
-            number = t[f]
-            result = check_rule(number, rules[i])
-            if not result:
-                possible_fields[f].remove(i)
-
-print(possible_fields)
+for ticket in valid_tickets:
+    for field in range(len(ticket)):
+        number = ticket[field]
+        for rule, ranges in rules.items():
+            if not check_rule(number, ranges):
+                possible_fields[rule].remove(field)
 
 matches = {}
 while len(matches) < len(rules):
-    for i in range(len(possible_fields)):
-        value = possible_fields[i][0]
+    for i in fields:
+        value = possible_fields[i]
         if len(possible_fields[i]) == 1 and value not in matches.values():
-            matches[fields[i]] = value
-            print("value:", value)
-            #        possible_fields.remove(possible_fields[i])
-            for j in range(len(possible_fields)):
-                if len(possible_fields[j]) > 1:
-                    possible_fields[j].remove(value)
-        print(possible_fields)
-
-print(possible_fields)
-print(fields)
-print(matches)
+            matches[i] = value[0]
+            for field in possible_fields:
+                if len(possible_fields[field]) > 1:
+                    possible_fields[field].remove(matches[i])
 
 for i in range(len(data)):
     if data[i] == 'your ticket:':
         my_ticket = parse_ticket(data[i+1])
 
-print("my ticket:", my_ticket)
-
 departure_numbers = {}
-
 for key, value in matches.items():
     if 'departure' in key:
         departure_numbers[key] = my_ticket[value]
 
-print("departure numbers:", departure_numbers)
-print(reduce(lambda x, y: x*y, departure_numbers.values()))
-
-#7067386090733 too high
-
-# departure station moet 5 zijn?!
+result = reduce(lambda x, y: x*y, departure_numbers.values())
+print(result)
+assert result == 514662805187
