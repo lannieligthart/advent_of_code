@@ -17,7 +17,7 @@ class Node:
 class LinkedList:
     def __init__(self, nodes=None):
         self.head = None
-        self.cups = {} # dictionary to store cups in
+        self.cups = [None] * (len(nodes) + 1) # list to store cups in (marginally faster than dict)
         if nodes is not None:
             node = Node(label=nodes.pop(0))
             self.cups[node.label] = node
@@ -51,13 +51,13 @@ class LinkedList:
         mid = self.head.next.next.label
         last = self.head.next.next.next.label
         if self.head.label == 1:
-            dest = len(self.cups)
+            dest = len(self.cups) - 1
         else:
             dest = self.cups[self.head.label - 1].label
-        while dest in [first, mid, last]:
+        while dest == first or dest == mid or dest == last:
             dest -= 1
             if dest == 0:
-                dest = len(self.cups)
+                dest = len(self.cups) - 1
         self.remove(last)
         self.insert_after(dest, first, last)
         #print("cups:", self)
@@ -71,7 +71,7 @@ class LinkedList:
 # for _ in range(100):
 #     ll.play()
 #
-# result = str(ll)[1:]
+# result = str(ll)[1:len(input)+1]
 #
 # print(result)
 #
