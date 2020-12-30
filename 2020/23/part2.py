@@ -4,6 +4,7 @@ startTime = time.time()
 
 input = "193467258"
 input = [int(input[i]) for i, cup in enumerate(input)]
+#input.extend(range(10, 1000000))
 
 class Node:
     def __init__(self, label):
@@ -65,13 +66,30 @@ class LinkedList:
         #print("destination:", dest)
         self.head = self.head.next
 
+# ll = LinkedList(nodes=input)
+#
+# for _ in range(100):
+#     ll.play()
+#
+# result = str(ll)[1:]
+#
+# print(result)
+#
+# assert result == "25468379"
+
+input.extend(range(10, 1000001))
+
 ll = LinkedList(nodes=input)
 
-for _ in range(100):
+for _ in range(10000000):
     ll.play()
 
-result = str(ll)[1:]
-
+result1 = ll.cups[1].next.label
+result2 = ll.cups[1].next.next.label
+result = result1 * result2
+print(result1, result2)
 print(result)
 
-assert result == "25468379"
+assert result == 474747880250
+executionTime = (time.time() - startTime)
+print('Execution time in seconds: ' + str(executionTime))
