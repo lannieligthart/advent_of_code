@@ -12,16 +12,23 @@ class Grid(object):
     def __init__(self, tiles):
         self.tiles = tiles
 
-    @staticmethod
-    def compare_sides(tile1, tile2):
+    def compare_sides(self, tile1, tile2):
         #print('comparing sides of', tile1.number, "and", tile2.number)
         matches = 0
+        matches_flipped = 0
         sides = list(itertools.product(tile1.sides, tile2.sides))
         for s in sides:
             if s[0] == s[1][::-1]:
                 matches += 1
-        #print(matches)
-        return matches
+        sides = list(itertools.product(tile1.sides_flipped, tile2.sides))
+        for s in sides:
+            if s[0] == s[1][::-1]:
+                matches_flipped += 1
+        if matches_flipped > matches:
+            self.tiles[tile1.number].flip()
+            return matches_flipped
+        elif matches > matches_flipped:
+            return matches
 
     def compare_all(self):
         comparisons = list(itertools.combinations(self.tiles.keys(), 2))
@@ -64,6 +71,13 @@ class Tile(object):
         sides = [side1, side2, side3, side4]
         return sides
 
+    @property
+    def sides_flipped(self):
+        sides = []
+        for s in self.sides:
+            sides.append(s[::-1])
+        return sides
+
     def flip(self):
         # reverse the image
         for i in range(len(self.image)):
@@ -97,20 +111,17 @@ grid = Grid(tiles)
 
 matches = grid.compare_all()
 print(matches)
-
-find_corners(matches)
 from collections import Counter
 print(Counter(matches.values()).most_common())
+
+corners = []
 for key, value in matches.items():
-    if value == 0:
-        grid.tiles[key].flip()
+    if value == 2:
+        corners.append(key)
 
+print(corners)
 
-matches = grid.compare_all()
-print(matches)
-find_corners(matches)
+result = corners[0] * corners[1] * corners[2] * corners[3]
+print(result)
 
-from collections import Counter
-print(Counter(matches.values()).most_common())
-
-
+assert result == 108603771107737
