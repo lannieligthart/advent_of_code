@@ -16,55 +16,46 @@ while not line >= len(data)-1:
 
 
 def parse_rules(input_lines):
-
-    def parse_rule(input_line):
-        input_line = input_line.split(": ")
-        index = int(input_line[0])
-        if not "|" in input_line[1]:
-            rule = input_line[1]
-        elif "|" in input_line[1]:
-            rule = "( " + input_line[1]+ " )"
-        rule = rule.replace('"', '')
-        return (index, rule)
-
     ruledict = {}
-    for rule in input_lines:
-        index, rule = parse_rule(rule)
+    for line in input_lines:
+        line = line.split(": ")
+        index = int(line[0])
+        if "|" in line[1]:
+            rule = "( " + line[1]+ " )"
+        else:
+            rule = line[1]
+        rule = rule.replace('"', '')
         ruledict[index] = rule
     return ruledict
-
-def add_brackets(ruledict):
-    i = 0
-    while True:
-        for number, value in ruledict.items():
-            values = value.split(" ")
-            for i in range(len(values)):
-                # replace each item in the list by its translation
-                if values[i] in ["|", "a", "b", "(", ")"]:
-                    values[i] = values[i]
-                elif int(values[i]) in ruledict:
-                    if "|" in ruledict[int(values[i])]:
-                        values[i] = "( "+ ruledict[int(values[i])] + " )"
-            ruledict[number] = " ".join(values)
-            i += 1
-            if i > 3:
-                return ruledict
 
 def translate(ruledict):
     dictcopy = ruledict.copy()
     while True:
-        for number, value in ruledict.items():
-            values = value.split(" ")
-            for i in range(len(values)):
-                # replace each item in the list by its translation
-                if values[i] in ["|", "a", "b", "(", ")"]:
-                    values[i] = values[i]
-                elif int(values[i]) in ruledict:
-                    values[i] = ruledict[int(values[i])]
-            ruledict[number] = " ".join(values)
+        values = ruledict[0].split(" ")
+        for i in range(len(values)):
+            # replace each item in the list by its translation
+            if not values[i].isdigit():
+                values[i] = values[i]
+            elif int(values[i]) in ruledict:
+                values[i] = ruledict[int(values[i])]
+        ruledict[0] = " ".join(values)
+
+        # for key, value in ruledict.items():
+        #     values = value.split(" ")
+        #     for i in range(len(values)):
+        #         # replace each item in the list by its translation
+        #         if not values[i].isdigit():
+        #             values[i] = values[i]
+        #         elif int(values[i]) in ruledict:
+        #             values[i] = ruledict[int(values[i])]
+        #     ruledict[key] = " ".join(values)
+        # once there are no more changes, convert 0 to regex:
         if ruledict == dictcopy:
-            return ruledict
+            regex = ruledict[0]
+            regex = "^" + "".join(regex.split(" ")) + "$"
+            return regex
         dictcopy = ruledict.copy()
+
 
 def validate(message):
     rule = ruledict[0]
@@ -75,22 +66,13 @@ def validate(message):
         return False
 
 ruledict = parse_rules(input_lines)
-
 # we need two rounds of translation (for the real input we need 4
-ruledict = add_brackets(ruledict)
-ruledict = translate(ruledict)
-
-for rule, value in ruledict.items():
-    ruledict[rule] = ruledict[rule].split(" ")
-    ruledict[rule] = "".join(ruledict[rule])
-
-print("after translation:")
-for key, value in ruledict.items():
-    print(key, value)
+regex = translate(ruledict)
+print(regex)
 
 valid_messages = 0
 for m in messages:
-    if validate(m):
+    if re.match(regex, m):
         valid_messages += 1
 
 print("n valid:", valid_messages)
