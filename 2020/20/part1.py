@@ -90,17 +90,6 @@ class Tile(object):
         image = input[1:]
         return Tile(number, image)
 
-def find_corners(matches):
-    corners = []
-    for tile in matches:
-        if matches[tile] == 2:
-            corners.append(tile)
-    print(corners)
-    if len(corners) == 4:
-        result = corners[0] * corners[1] * corners[2] * corners[3]
-        print(result)
-    else:
-        print("more than 4:", len(corners))
 
 tiles = {}
 for d in data:
