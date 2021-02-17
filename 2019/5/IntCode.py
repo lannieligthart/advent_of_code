@@ -154,18 +154,17 @@ class Intcode(object):
             print("save input to position", self.par1.value)
         # takes a single integer as input and saves it to the position given by its only parameter.
         # For example, the instruction 3,50 would take an input value and store it at address 50.
-        self.code[self.par1.value] = self.input
+        self.code[self.par1.value] = self.input[0]
         if debug:
-            print("inserted input value (" + str(self.input) + ") at position " + str(self.par1.value))
+            print("inserted input value (" + str(self.input[0]) + ") at position " + str(self.par1.value))
         self.pointer += 2
+        if len(self.input) > 1:
+            self.input = self.input[1:]
 
     def op4(self, debug):
-        # outputs the value of its only parameter.
+        # outputs the value of its only parameter (translated! otherwise tests fail).
         # For example, the instruction 4,50 would output the value at address 50.
         p1 = self.translate()[0]
-        if debug:
-            print("return value", p1)
-        #self.output.append(p1)
         self.pointer += 2
         if debug:
             print("return value", p1)
@@ -241,9 +240,13 @@ class Intcode(object):
             self.code[1] = value1
         if value2 is not None:
             self.code[2] = value2
-
         self.read_instruction()
-        self.input = input
+
+        if input is not None and isinstance(input, list):
+            self.input = input
+        elif input is not None and isinstance(input, int):
+            self.input = [input]
+
         while True:
             if self.opcode == 1:
                 self.add(debug)
@@ -252,9 +255,7 @@ class Intcode(object):
             elif self.opcode == 3:
                 self.op3(debug)
             elif self.opcode == 4:
-                diag = self.op4(debug)
-#                if diag != 0:
-                return diag
+                return self.op4(debug)
             elif self.opcode == 5:
                 self.op5(debug)
             elif self.opcode == 6:
