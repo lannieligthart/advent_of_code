@@ -16,15 +16,15 @@ class TestOpcodes(unittest.TestCase):
     def test_day2_testinput2(self):
         code_day2 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/testinput2.txt')
         day2 = ic.Intcode(code_day2)
-        day2.run()
-        self.assertEqual(day2.code, [1101, 100, -1, 4, 99])
+        day2.run(debug=True)
+        self.assertEqual({0: 1101, 1: 100, 2: -1, 3: 4, 4: 99}, day2.code)
 
     def test_day5_testinput(self):
         testcode_day5 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/testinput.txt')
         day5test = ic.Intcode(testcode_day5)
-        self.assertEqual(day5test.code, [1002, 4, 3, 4, 33])
+        self.assertEqual({0: 1002, 1: 4, 2: 3, 3: 4, 4: 33}, day5test.code)
         day5test.run()
-        self.assertEqual(day5test.code, [1002, 4, 3, 4, 99])
+        self.assertEqual({0: 1002, 1: 4, 2: 3, 3: 4, 4: 99}, day5test.code)
 
     def test_equals_8(self):
         self.code = ic.parse("3,9,8,9,10,9,4,9,99,-1,8")
@@ -47,7 +47,7 @@ class TestOpcodes(unittest.TestCase):
     def test_less_than_8_immediate_mode(self):
         self.code = ic.parse("3,3,1107,-1,8,3,4,3,99")
         self.prog = ic.Intcode(self.code)
-        self.assertEqual(self.prog.run(8), 0)
+        self.assertEqual(self.prog.run(8, debug=True), 0)
         self.assertEqual(self.prog.run(7), 1)
 
     def test_jump_zero_if_input_zero(self):
@@ -81,7 +81,7 @@ class TestOpcodes(unittest.TestCase):
         self.prog.par2.mode = 0
         self.prog.par3.mode = 0
         self.prog.add(debug=False)
-        self.assertEqual(self.prog.code, [1, 1, 2, 3, 4, 95, -1])
+        self.assertEqual({0: 1, 1: 1, 2: 2, 3: 3, 4: 4, 5: 95, 6: -1}, self.prog.code)
 
     def test_add_immediate(self):
         self.code = ic.parse("1,97,2,6,4,95,-1")
@@ -93,7 +93,7 @@ class TestOpcodes(unittest.TestCase):
         self.prog.par2.mode = 1
         self.prog.par3.mode = 1
         self.prog.add(debug=False)
-        self.assertEqual(self.prog.code, [1, 97, 2, 6, 4, 95, 99])
+        self.assertEqual({0: 1, 1: 97, 2: 2, 3: 6, 4: 4, 5: 95, 6: 99}, self.prog.code)
 
     def test_day2_part1(self):
         code_day2 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/2/input.txt')

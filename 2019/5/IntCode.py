@@ -19,14 +19,16 @@
 def parse_code(filename):
     with open(filename) as f:
         code = f.read().split(",")
-    for i in range(len(code)):
-        code[i] = int(code[i])
+    code = {i: int(code[i]) for i in range(0, len(code))}
+    # for i in range(len(code)):
+    #     code[i] = int(code[i])
     return code
 
 def parse(code):
     code = code.split(",")
-    for i in range(len(code)):
-        code[i] = int(code[i])
+    code = {i: int(code[i]) for i in range(0, len(code))}
+    # for i in range(len(code)):
+    #     code[i] = int(code[i])
     return code
 
 # 0 - opcode (1 = add, 2 = multiply, 99 = stop)
@@ -57,6 +59,7 @@ class Intcode(object):
         self.par2 = Parameter(None, None)
         self.par3 = Parameter(None, None)
         self.input = None
+        self.relative_base = 0
 
     def __str__(self):
         par1 = str(self.par1)
@@ -86,38 +89,72 @@ class Intcode(object):
 
         # read in new modes and values
         modes = [int(extended_opcode[2]), int(extended_opcode[1]), int(extended_opcode[0])]
-        values = self.code[self.pointer+1:self.pointer+4]
 
         # opcodes with 3 parameters
         if self.opcode in [1, 2, 7, 8]:
+            values = [self.code[self.pointer + 1], self.code[self.pointer + 2], self.code[self.pointer + 3]]
             self.par1 = Parameter(values[0], modes[0])
             self.par2 = Parameter(values[1], modes[1])
             self.par3 = Parameter(values[2], modes[2])
+            self.pointer += 4
 
         # # opcodes with 2 parameters
         elif self.opcode in [5, 6]:
+            values = [self.code[self.pointer + 1], self.code[self.pointer + 2]]
             self.par1 = Parameter(values[0], modes[0])
             self.par2 = Parameter(values[1], modes[1])
+            self.pointer += 3
 
         # opcodes with 1 parameter
-        elif self.opcode in [3, 4]:
+        elif self.opcode in [3, 4, 9]:
+            values = [self.code[self.pointer + 1]]
             self.par1 = Parameter(values[0], modes[0])
+            self.pointer += 2
 
-        #print(self)
 
     def translate(self):
         # 0 = position mode
         # 1 = immediate mode
+        # 2 = relative mode
         if self.par1.value is not None:
-            p1 = self.par1.value if self.par1.mode == 1 else self.code[self.par1.value]
+            # if the position does not exist yet, initialize it at zero.
+            # do the same for this position plus the relative base.
+            if self.par1.mode == 0:
+                if not self.par1.value in self.code and self.par1.value >= 0:
+                    self.code[self.par1.value] = 0
+                p1 = self.code[self.par1.value]
+            elif self.par1.mode == 1:
+                p1 = self.par1.value
+            elif self.par1.mode == 2:
+                if not self.par1.value in self.code and self.par1.value >= 0:
+                    self.code[self.par1.value + self.relative_base] = 0
+                p1 = self.code[self.par1.value + self.relative_base]
         else:
             p1 = None
         if self.par2.value is not None:
-            p2 = self.par2.value if self.par2.mode == 1 else self.code[self.par2.value]
+            if self.par2.mode == 0:
+                if not self.par2.value in self.code and self.par2.value >= 0:
+                    self.code[self.par2.value] = 0
+                p2 = self.code[self.par2.value]
+            elif self.par2.mode == 1:
+                p2 = self.par2.value
+            elif self.par2.mode == 2:
+                if not self.par2.value in self.code and self.par2.value >= 0:
+                    self.code[self.par2.value + self.relative_base] = 0
+                p2 = self.code[self.par2.value + self.relative_base]
         else:
             p2 = None
         if self.par3.value is not None:
-            p3 = self.par3.value if self.par3.mode == 1 else self.code[self.par3.value]
+            if self.par3.mode == 0:
+                if not self.par3.value in self.code and self.par3.value >= 0:
+                    self.code[self.par3.value] = 0
+                p3 = self.code[self.par3.value]
+            elif self.par3.mode == 1:
+                p3 = self.par3.value
+            elif self.par3.mode == 2:
+                if not self.par2.value in self.code and self.par2.value >= 0:
+                    self.code[self.par2.value + self.relative_base] = 0
+                p3 = self.code[self.par3.value + self.relative_base]
         else:
             p3 = None
         return (p1, p2, p3)
@@ -133,7 +170,7 @@ class Intcode(object):
         self.code[self.par3.value] = summed
         if debug:
             print("inserted", summed, "at position", self.par3.value)
-        self.pointer += 4
+
 
     def multiply(self, debug):
         # method to be carried out if opcode == 2
@@ -147,7 +184,7 @@ class Intcode(object):
         self.code[target] = product
         if debug:
             print("inserted", product, "at position", target)
-        self.pointer += 4
+
 
     def op3(self, debug):
         if debug:
@@ -157,7 +194,6 @@ class Intcode(object):
         self.code[self.par1.value] = self.input[0]
         if debug:
             print("inserted input value (" + str(self.input[0]) + ") at position " + str(self.par1.value))
-        self.pointer += 2
         if len(self.input) > 1:
             self.input = self.input[1:]
 
@@ -165,7 +201,6 @@ class Intcode(object):
         # outputs the value of its only parameter (translated! otherwise tests fail).
         # For example, the instruction 4,50 would output the value at address 50.
         p1 = self.translate()[0]
-        self.pointer += 2
         if debug:
             print("return value", p1)
         return p1
@@ -180,8 +215,7 @@ class Intcode(object):
             self.pointer = p2
             if debug:
                 print("set pointer at position", p2)
-        else:
-            self.pointer += 3
+
 
     def op6(self, debug):
         if debug:
@@ -193,8 +227,7 @@ class Intcode(object):
             self.pointer = p2
             if debug:
                 print("set pointer at position", p2)
-        else:
-            self.pointer += 3
+
 
     def op7(self, debug):
         # less than: less than: if the first parameter is less than the second parameter, it stores 1 in the position
@@ -210,7 +243,6 @@ class Intcode(object):
             self.code[self.par3.value] = 0
             if debug:
                 print("inserted value 0 at position", self.par3.value)
-        self.pointer += 4
 
     def op8(self, debug):
         # equals: if the first parameter is equal to the second parameter, it stores 1 in the position given by the
@@ -226,7 +258,12 @@ class Intcode(object):
             self.code[self.par3.value] = 0
             if debug:
                 print("inserted value 0 at position", self.par3.value)
-        self.pointer += 4
+
+    def op9(self, debug):
+        p1 = self.translate()[0]
+        if debug:
+            print("adding", p1, "to relative base")
+        self.relative_base += p1
 
     def run(self, input=None, value1=None, value2=None, reset=True, debug=False):
         # this method runs the program, taking two optional start values as input.
@@ -255,7 +292,9 @@ class Intcode(object):
             elif self.opcode == 3:
                 self.op3(debug)
             elif self.opcode == 4:
-                return self.op4(debug)
+                result = self.op4(debug)
+                if result is not None:
+                    return result
             elif self.opcode == 5:
                 self.op5(debug)
             elif self.opcode == 6:
@@ -264,9 +303,19 @@ class Intcode(object):
                 self.op7(debug)
             elif self.opcode == 8:
                 self.op8(debug)
+            elif self.opcode == 9:
+                self.op9(debug)
             elif self.opcode == 99:
                 return self.code[0]
             self.read_instruction()
+
+    # def run(self, input=None, value1=None, value2=None, reset=True, debug=False):
+    #     result = []
+    #     while True:
+    #         tmp = self.execute(reset=False)
+    #         if tmp is None:
+    #             return result
+    #         result.append(tmp)
 
 ### Parameters that an instruction writes to will never be in immediate mode.
 
