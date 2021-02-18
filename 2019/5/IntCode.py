@@ -60,6 +60,7 @@ class Intcode(object):
         self.par3 = Parameter(None, None)
         self.input = None
         self.relative_base = 0
+        self.output = []
 
     def __str__(self):
         par1 = str(self.par1)
@@ -265,12 +266,13 @@ class Intcode(object):
             print("adding", p1, "to relative base")
         self.relative_base += p1
 
-    def run(self, input=None, value1=None, value2=None, reset=True, debug=False):
+    def execute(self, input=None, value1=None, value2=None, reset=True, debug=False):
         # this method runs the program, taking two optional start values as input.
         # whether or not the state of the intcode program should be preserved can be specified with the reset argument.
         if reset:
             self.code = self.original_code.copy()
             self.pointer = 0
+            self.output=[]
 
         # set start values
         if value1 is not None:
@@ -294,7 +296,7 @@ class Intcode(object):
             elif self.opcode == 4:
                 result = self.op4(debug)
                 if result is not None:
-                    return result
+                    self.output.append(result)
             elif self.opcode == 5:
                 self.op5(debug)
             elif self.opcode == 6:
@@ -306,16 +308,14 @@ class Intcode(object):
             elif self.opcode == 9:
                 self.op9(debug)
             elif self.opcode == 99:
-                return self.code[0]
+                return 'exit'
             self.read_instruction()
 
-    # def run(self, input=None, value1=None, value2=None, reset=True, debug=False):
-    #     result = []
-    #     while True:
-    #         tmp = self.execute(reset=False)
-    #         if tmp is None:
-    #             return result
-    #         result.append(tmp)
+    def run(self, input=None, value1=None, value2=None, reset=True, debug=False):
+        while True:
+            tmp = self.execute(input, value1, value2, reset, debug)
+            if tmp == 'exit':
+                return self.output
 
 ### Parameters that an instruction writes to will never be in immediate mode.
 
