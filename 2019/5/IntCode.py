@@ -297,6 +297,7 @@ class Intcode(object):
                 result = self.op4(debug)
                 if result is not None:
                     self.output.append(result)
+                    return 'exit'
             elif self.opcode == 5:
                 self.op5(debug)
             elif self.opcode == 6:
@@ -318,6 +319,3 @@ class Intcode(object):
                 return self.output
 
 ### Parameters that an instruction writes to will never be in immediate mode.
-
-
-

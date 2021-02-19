@@ -57,13 +57,16 @@ for seq in seqs:
     for i in range(5):
         inp1 = seq[i]
         amps.append(ic.Intcode(code))
-        inp2 = amps[i].run([inp1, inp2], reset=False)
-
+        print("inp1:", inp1, "inp2:", inp2)
+        inp2 = amps[i].run([inp1, inp2], reset=False, debug=False)
+        print("*** OUTPUT:", inp2)
     while True:
         i += 1
         i = i % len(seq)
         inp1 = seq[i]
-        inp2 = amps[i].run([inp2], reset=False)
+        print("inp2:", inp2)
+        inp2 = amps[i].run([inp2], reset=False, debug=False)
+        print("*** OUTPUT:", inp2)
         if i == 4:
             results.append(inp2)
         if i == 4 and amps[i].code[amps[i].pointer] == 99:

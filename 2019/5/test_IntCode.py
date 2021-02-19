@@ -48,7 +48,7 @@ class TestOpcodes(unittest.TestCase):
         self.code = ic.parse("3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9")
         self.prog = ic.Intcode(self.code)
         self.assertEqual(self.prog.run(0, debug=False, reset=True), [0])
-        self.assertEqual(self.prog.run(3, debug=False), 1)
+        self.assertEqual(self.prog.run(3, debug=False), [1])
 
     def test_jump_zero_if_input_zero_immediate(self):
         self.code = ic.parse("3,3,1105,-1,9,1101,0,0,12,4,12,99,1")
@@ -104,9 +104,10 @@ class TestOpcodes(unittest.TestCase):
     def test_day5_part1(self):
         code_day5 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/input.txt')
         day5 = ic.Intcode(code_day5)
-        result = 0
-        while result == 0:
+        result = [0]
+        while result[-1] == 0:
             result = day5.run(input=1, reset=False)
+        pass
         self.assertEqual(result[-1], 14155342)
 
     def test_day5_part2(self):
@@ -162,7 +163,7 @@ class TestOpcodes(unittest.TestCase):
                 inp1 = s[i]
                 amps.append(ic.Intcode(code))
                 output = amps[i].run([inp1, inp2], reset=False, debug=False)
-                inp2 = output[0]
+                inp2 = output[-1]
             results.append(inp2)
         result = max(results)
         self.assertEqual(result, 366376)
@@ -178,20 +179,25 @@ class TestOpcodes(unittest.TestCase):
             for i in range(5):
                 inp1 = seq[i]
                 amps.append(ic.Intcode(code))
+                #print("inp1:", inp1, "inp2:", inp2)
                 output = amps[i].run([inp1, inp2], reset=False, debug=False)
                 inp2 = output[-1]
+                #print("*** OUTPUT:", inp2)
             while True:
                 i += 1
                 i = i % len(seq)
                 inp1 = seq[i]
-                output = amps[i].run([inp1, inp2], reset=False, debug=False)
-                inp2 = output[0]
+                #print("inp2:", inp2)
+                output = amps[i].run([inp2], reset=False, debug=False)
+                inp2 = output[-1]
+                #print("*** OUTPUT:", inp2)
                 if i == 4:
                     results.append(inp2)
-                #if i == 4 and amps[i].code[amps[i].pointer] == 99:
-                #    break
+                if i == 4 and amps[i].code[amps[i].pointer] == 99:
+                   break
             max_results.append(max(results))
-        self.assertEqual([21596786], max(max_results))
+        self.assertEqual(21596786, max(max_results))
+
 
 
 if __name__ == '__main__':
