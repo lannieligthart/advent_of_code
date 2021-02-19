@@ -113,95 +113,81 @@ class Intcode(object):
             self.pointer += 2
 
 
-    def translate(self):
+    def translate(self, par):
         # 0 = position mode
         # 1 = immediate mode
         # 2 = relative mode
-        if self.par1.value is not None:
+        if par.value is not None:
             # if the position does not exist yet, initialize it at zero.
             # do the same for this position plus the relative base.
-            if self.par1.mode == 0:
-                if not self.par1.value in self.code and self.par1.value >= 0:
-                    self.code[self.par1.value] = 0
-                p1 = self.code[self.par1.value]
-            elif self.par1.mode == 1:
-                p1 = self.par1.value
-            elif self.par1.mode == 2:
-                if not self.par1.value in self.code and self.par1.value >= 0:
-                    self.code[self.par1.value + self.relative_base] = 0
-                p1 = self.code[self.par1.value + self.relative_base]
+            if par.mode == 0:
+                if not par.value in self.code and par.value >= 0:
+                    self.code[par.value] = 0
+                pt = self.code[par.value]
+            elif par.mode == 1:
+                pt = par.value
+            elif par.mode == 2:
+                if not par.value in self.code and par.value >= 0:
+                    self.code[par.value + self.relative_base] = 0
+                pt = self.code[par.value + self.relative_base]
         else:
-            p1 = None
-        if self.par2.value is not None:
-            if self.par2.mode == 0:
-                if not self.par2.value in self.code and self.par2.value >= 0:
-                    self.code[self.par2.value] = 0
-                p2 = self.code[self.par2.value]
-            elif self.par2.mode == 1:
-                p2 = self.par2.value
-            elif self.par2.mode == 2:
-                if not self.par2.value in self.code and self.par2.value >= 0:
-                    self.code[self.par2.value + self.relative_base] = 0
-                p2 = self.code[self.par2.value + self.relative_base]
-        else:
-            p2 = None
-        if self.par3.value is not None:
-            if self.par3.mode == 0:
-                if not self.par3.value in self.code and self.par3.value >= 0:
-                    self.code[self.par3.value] = 0
-                p3 = self.code[self.par3.value]
-            elif self.par3.mode == 1:
-                p3 = self.par3.value
-            elif self.par3.mode == 2:
-                if not self.par2.value in self.code and self.par2.value >= 0:
-                    self.code[self.par2.value + self.relative_base] = 0
-                p3 = self.code[self.par3.value + self.relative_base]
-        else:
-            p3 = None
-        return (p1, p2, p3)
+            pt = None
+        return pt
+
+    def translate_literal(self, par):
+        if par.mode == 0 or par.mode == 1:
+            pt = par.value
+        if par.mode == 2:
+            pt = par.value + self.relative_base
+        return pt
 
     def add(self, debug):
         # method to be carried out if opcode == 1
         # uses three parameters to find two values and write their sum to a third position.
-        p1, p2 = self.translate()[0:2]
+        p1 = self.translate(self.par1)
+        p2 = self.translate(self.par2)
+        p3 = self.translate_literal(self.par3)
         summed = p1 + p2
         if debug:
             print("added", p1, "and", p2)
         # note: p3 should be the value! do not interpret mode or tests will fail.
-        self.code[self.par3.value] = summed
+        self.code[p3] = summed
         if debug:
-            print("inserted", summed, "at position", self.par3.value)
+            print("inserted", summed, "at position", p3)
 
 
     def multiply(self, debug):
         # method to be carried out if opcode == 2
         # uses three parameters to find two values and write their product to a third position.
-        target = self.par3.value
+        p3 = self.translate_literal(self.par3)
         # immediate vs position mode
-        p1, p2 = self.translate()[0:2]
+        p1 = self.translate(self.par1)
+        p2 = self.translate(self.par2)
         product = p1 * p2
         if debug:
             print("multiplied", p1, "by", p2)
-        self.code[target] = product
+        self.code[p3] = product
         if debug:
-            print("inserted", product, "at position", target)
+            print("inserted", product, "at position", p3)
 
 
     def op3(self, debug):
+        p1 = self.translate_literal(self.par1)
         if debug:
-            print("save input to position", self.par1.value)
+            print("save input to position", p1)
+
         # takes a single integer as input and saves it to the position given by its only parameter.
         # For example, the instruction 3,50 would take an input value and store it at address 50.
-        self.code[self.par1.value] = self.input[0]
+        self.code[p1] = self.input[0]
         if debug:
-            print("inserted input value (" + str(self.input[0]) + ") at position " + str(self.par1.value))
+            print("inserted input value (" + str(self.input[0]) + ") at position " + str(p1))
         if len(self.input) > 1:
             self.input = self.input[1:]
 
     def op4(self, debug):
         # outputs the value of its only parameter (translated! otherwise tests fail).
         # For example, the instruction 4,50 would output the value at address 50.
-        p1 = self.translate()[0]
+        p1 =self.translate(self.par1)
         if debug:
             print("return value", p1)
         return p1
@@ -211,7 +197,8 @@ class Intcode(object):
             print("jump if p1 is non-zero")
         # jump-if-true: if the first parameter is non-zero, it sets the instruction pointer to the value from the second
         # parameter. Otherwise, it does nothing.
-        p1, p2 = self.translate()[0:2]
+        p1 =self.translate(self.par1)
+        p2 =self.translate(self.par2)
         if not p1 == 0:
             self.pointer = p2
             if debug:
@@ -223,7 +210,8 @@ class Intcode(object):
             print("jump if p1 is zero")
         # jump-if-false: if the first parameter is zero, it sets the instruction pointer to the value from the second
         # parameter. Otherwise, it does nothing.
-        p1, p2 = self.translate()[0:2]
+        p1 =self.translate(self.par1)
+        p2 =self.translate(self.par2)
         if p1 == 0:
             self.pointer = p2
             if debug:
@@ -233,35 +221,40 @@ class Intcode(object):
     def op7(self, debug):
         # less than: less than: if the first parameter is less than the second parameter, it stores 1 in the position
         # given by the third parameter. Otherwise, it stores 0.
-        p1, p2, p3 = self.translate()
+        p1 =self.translate(self.par1)
+        p2 =self.translate(self.par2)
+        p3 = self.translate_literal(self.par3)
+
         if debug:
             print("if p1 < p2, store 1 in position p3 (" + str(p3) + "), otherwise store 0")
         if p1 < p2:
-            self.code[self.par3.value] = 1
+            self.code[p3] = 1
             if debug:
-                print("inserted value 1 at position", self.par3.value)
+                print("inserted value 1 at position", p3)
         else:
-            self.code[self.par3.value] = 0
+            self.code[p3] = 0
             if debug:
-                print("inserted value 0 at position", self.par3.value)
+                print("inserted value 0 at position", p3)
 
     def op8(self, debug):
         # equals: if the first parameter is equal to the second parameter, it stores 1 in the position given by the
         # third parameter. Otherwise, it stores 0.
-        p1, p2, p3 = self.translate()
+        p1 =self.translate(self.par1)
+        p2 =self.translate(self.par2)
+        p3 = self.translate_literal(self.par3)
         if debug:
             print("if p1 == p2, store 1 in position p3 (" + str(p3) + "), otherwise store 0.")
         if p1 == p2:
-            self.code[self.par3.value] = 1
+            self.code[p3] = 1
             if debug:
-                print("inserted value 1 at position", self.par3.value)
+                print("inserted value 1 at position", p3)
         else:
-            self.code[self.par3.value] = 0
+            self.code[p3] = 0
             if debug:
-                print("inserted value 0 at position", self.par3.value)
+                print("inserted value 0 at position", p3)
 
     def op9(self, debug):
-        p1 = self.translate()[0]
+        p1 =self.translate(self.par1)
         if debug:
             print("adding", p1, "to relative base")
         self.relative_base += p1
