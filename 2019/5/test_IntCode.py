@@ -23,47 +23,47 @@ class TestOpcodes(unittest.TestCase):
     def test_equals_8(self):
         self.code = ic.parse("3,9,8,9,10,9,4,9,99,-1,8")
         self.prog = ic.Intcode(self.code)
-        self.assertEqual(self.prog.run(8, reset=True), [1])
-        self.assertEqual(self.prog.run(7), [0])
+        self.assertEqual(self.prog.run(8, reset=True), 1)
+        self.assertEqual(self.prog.run(7), 0)
 
     def test_less_than_8(self):
         self.code = ic.parse("3,9,7,9,10,9,4,9,99,-1,8")
         self.prog = ic.Intcode(self.code)
-        self.assertEqual(self.prog.run(8, reset=True), [0])
-        self.assertEqual(self.prog.run(7), [1])
+        self.assertEqual(self.prog.run(8, reset=True), 0)
+        self.assertEqual(self.prog.run(7), 1)
 
     def test_equals_8_immediate_mode(self):
         self.code = ic.parse("3,3,1108,-1,8,3,4,3,99")
         self.prog = ic.Intcode(self.code)
-        self.assertEqual(self.prog.run(8, reset=True), [1])
-        self.assertEqual(self.prog.run(7), [0])
+        self.assertEqual(self.prog.run(8, reset=True), 1)
+        self.assertEqual(self.prog.run(7), 0)
 
     def test_less_than_8_immediate_mode(self):
         self.code = ic.parse("3,3,1107,-1,8,3,4,3,99")
         self.prog = ic.Intcode(self.code)
-        self.assertEqual(self.prog.run(8, debug=True, reset=True), [0])
-        self.assertEqual(self.prog.run(7), [1])
+        self.assertEqual(self.prog.run(8, debug=True, reset=True), 0)
+        self.assertEqual(self.prog.run(7), 1)
 
     def test_jump_zero_if_input_zero(self):
         self.code = ic.parse("3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9")
         self.prog = ic.Intcode(self.code)
-        self.assertEqual(self.prog.run(0, debug=False, reset=True), [0])
-        self.assertEqual(self.prog.run(3, debug=False), [1])
+        self.assertEqual(self.prog.run(0, debug=False, reset=True), 0)
+        self.assertEqual(self.prog.run(3, debug=False), 1)
 
     def test_jump_zero_if_input_zero_immediate(self):
         self.code = ic.parse("3,3,1105,-1,9,1101,0,0,12,4,12,99,1")
         self.prog = ic.Intcode(self.code)
-        self.assertEqual(self.prog.run(0, reset=True), [0])
-        self.assertEqual(self.prog.run(2323), [1])
+        self.assertEqual(self.prog.run(0, reset=True), 0)
+        self.assertEqual(self.prog.run(2323), 1)
 
     def test_longer_example_day5_2(self):
         #999 if value below 8, 1000 if equal to 8, 1001 if larger than 8
         self.code = ic.parse("3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,"
                      "999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99")
         self.prog = ic.Intcode(self.code)
-        self.assertEqual([999], self.prog.run(7, debug=False))
-        self.assertEqual([1000], self.prog.run(8, reset=True))
-        self.assertEqual([1001], self.prog.run(9))
+        self.assertEqual(999, self.prog.run(7, debug=False))
+        self.assertEqual(1000, self.prog.run(8, reset=True))
+        self.assertEqual(1001, self.prog.run(9))
 
     def test_add_position(self):
         self.code = ic.parse("1,1,2,-1,4,95,-1")
@@ -89,6 +89,38 @@ class TestOpcodes(unittest.TestCase):
         self.prog.add(debug=False)
         self.assertEqual({0: 1, 1: 97, 2: 2, 3: 6, 4: 4, 5: 95, 6: 99}, self.prog.code)
 
+    def test_day7_ex1(self):
+        code = ic.parse("109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99")
+        expected = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
+        prog = ic.Intcode(code)
+        for _ in range(len(code)):
+            result = prog.run(reset=False, debug=False, return_all=True)
+        self.assertEqual(expected, result)
+
+    def test_day7_ex2(self):
+        code = ic.parse("1102,34915192,34915192,7,4,7,99,0")
+        prog = ic.Intcode(code)
+        self.assertEqual(1219070632396864, prog.run(reset=False))
+
+    def test_day7_ex3(self):
+        code = ic.parse("104,1125899906842624,99")
+        prog = ic.Intcode(code)
+        self.assertEqual(1125899906842624, prog.run(reset=False))
+
+    def test_relative_mode(self):
+        prog = ic.Intcode([109, -1, 204, 1, 99])
+        self.assertEqual(109, prog.run())
+        prog = ic.Intcode([109, 1, 9, 2, 204, -6, 99])
+        self.assertEqual(204, prog.run())
+        prog = ic.Intcode([109, 1, 109, 9, 204, -6, 99])
+        self.assertEqual(204, prog.run())
+        prog = ic.Intcode([109, 1, 209, -1, 204, -106, 99])
+        self.assertEqual(204, prog.run())
+        prog = ic.Intcode([109, 1, 3, 3, 204, 2, 99])
+        self.assertEqual(66, prog.run(66))
+        prog = ic.Intcode([109, 1, 203, 2, 204, 2, 99])
+        self.assertEqual(66, prog.run(66))
+
     def test_day2_part1(self):
         code_day2 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/2/input.txt')
         day2 = ic.Intcode(code_day2)
@@ -104,17 +136,17 @@ class TestOpcodes(unittest.TestCase):
     def test_day5_part1(self):
         code_day5 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/input.txt')
         day5 = ic.Intcode(code_day5)
-        result = [0]
-        while result[-1] == 0:
+        while True:
             result = day5.run(input=1, reset=False)
-        pass
-        self.assertEqual(result[-1], 14155342)
+            if result != 0:
+                break
+        self.assertEqual(result, 14155342)
 
     def test_day5_part2(self):
         code_day5 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/input.txt')
         day5 = ic.Intcode(code_day5)
         result = day5.run(input=5)
-        self.assertEqual([8684145], result)
+        self.assertEqual(8684145, result)
 
     def test_day7_1_ex1(self):
         code = ic.parse('3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0')
@@ -124,8 +156,7 @@ class TestOpcodes(unittest.TestCase):
         for i in range(5):
             inp1 = seq[i]
             amps.append(ic.Intcode(code))
-            output = amps[i].run([inp1, inp2], reset=False, debug=False)
-            inp2 = output[0]
+            inp2 = amps[i].run([inp1, inp2], reset=False, debug=False)
         self.assertEqual(43210, inp2)
 
     def test_day7_1_ex2(self):
@@ -136,8 +167,7 @@ class TestOpcodes(unittest.TestCase):
         for i in range(5):
             inp1 = seq[i]
             amps.append(ic.Intcode(code))
-            output = amps[i].run([inp1, inp2], reset=False, debug=False)
-            inp2 = output[0]
+            inp2 = amps[i].run([inp1, inp2], reset=False, debug=False)
         self.assertEqual(54321, inp2)
 
     def test_day7_1_ex3(self):
@@ -148,8 +178,7 @@ class TestOpcodes(unittest.TestCase):
         for i in range(5):
             inp1 = seq[i]
             amps.append(ic.Intcode(code))
-            output = amps[i].run([inp1, inp2], reset=False, debug=False)
-            inp2 = output[0]
+            inp2 = amps[i].run([inp1, inp2], reset=False, debug=False)
         self.assertEqual(65210, inp2)
 
     def test_day7_part1(self):
@@ -162,8 +191,7 @@ class TestOpcodes(unittest.TestCase):
             for i in range(5):
                 inp1 = s[i]
                 amps.append(ic.Intcode(code))
-                output = amps[i].run([inp1, inp2], reset=False, debug=False)
-                inp2 = output[-1]
+                inp2 = amps[i].run([inp1, inp2], reset=False, debug=False)
             results.append(inp2)
         result = max(results)
         self.assertEqual(result, 366376)
@@ -180,16 +208,14 @@ class TestOpcodes(unittest.TestCase):
                 inp1 = seq[i]
                 amps.append(ic.Intcode(code))
                 #print("inp1:", inp1, "inp2:", inp2)
-                output = amps[i].run([inp1, inp2], reset=False, debug=False)
-                inp2 = output[-1]
+                inp2 = amps[i].run([inp1, inp2], reset=False, debug=False)
                 #print("*** OUTPUT:", inp2)
             while True:
                 i += 1
                 i = i % len(seq)
                 inp1 = seq[i]
                 #print("inp2:", inp2)
-                output = amps[i].run([inp2], reset=False, debug=False)
-                inp2 = output[-1]
+                inp2 = amps[i].run([inp2], reset=False, debug=False)
                 #print("*** OUTPUT:", inp2)
                 if i == 4:
                     results.append(inp2)
@@ -197,8 +223,6 @@ class TestOpcodes(unittest.TestCase):
                    break
             max_results.append(max(results))
         self.assertEqual(21596786, max(max_results))
-
-
 
 if __name__ == '__main__':
     unittest.main()

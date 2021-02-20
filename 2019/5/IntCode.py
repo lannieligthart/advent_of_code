@@ -290,7 +290,7 @@ class Intcode(object):
                 result = self.op4(debug)
                 if result is not None:
                     self.output.append(result)
-                    return 'exit'
+                    return True
             elif self.opcode == 5:
                 self.op5(debug)
             elif self.opcode == 6:
@@ -302,13 +302,16 @@ class Intcode(object):
             elif self.opcode == 9:
                 self.op9(debug)
             elif self.opcode == 99:
-                return 'exit'
+                return False
             self.read_instruction()
 
-    def run(self, input=None, value1=None, value2=None, reset=True, debug=False):
+    def run(self, input=None, value1=None, value2=None, reset=True, debug=False, return_all=False):
         while True:
-            tmp = self.execute(input, value1, value2, reset, debug)
-            if tmp == 'exit':
+            output = self.execute(input, value1, value2, reset, debug)
+            if output and return_all:
                 return self.output
+            elif output and not return_all:
+                return self.output[-1]
+            elif not output:
+                return
 
-### Parameters that an instruction writes to will never be in immediate mode.
