@@ -10,7 +10,7 @@ class TestOpcodes(unittest.TestCase):
     def test_day2_testinput2(self):
         code_day2 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/testinput2.txt')
         day2 = ic.Intcode(code_day2)
-        day2.run(debug=True)
+        day2.run(debug=False)
         self.assertEqual({0: 1101, 1: 100, 2: -1, 3: 4, 4: 99}, day2.code)
 
     def test_day5_testinput(self):
@@ -41,7 +41,7 @@ class TestOpcodes(unittest.TestCase):
     def test_less_than_8_immediate_mode(self):
         self.code = ic.parse("3,3,1107,-1,8,3,4,3,99")
         self.prog = ic.Intcode(self.code)
-        self.assertEqual(self.prog.run(8, debug=True, reset=True), 0)
+        self.assertEqual(self.prog.run(8, debug=False, reset=True), 0)
         self.assertEqual(self.prog.run(7), 1)
 
     def test_jump_zero_if_input_zero(self):
