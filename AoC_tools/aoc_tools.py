@@ -30,4 +30,4 @@ def display_grid(positions, lookup_table):
 
     lol = grid.values.tolist()
     for l in lol:
-        print("".join(l))
+        print(" ".join(l))
