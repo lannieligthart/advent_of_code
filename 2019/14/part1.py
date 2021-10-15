@@ -56,6 +56,39 @@ def get_base_elements(formulas):
             base_elements.append(element)
     return base_elements
 
+def get_hierarchy(formulas):
+    # dict to store elements and their level
+    elements = {
+        "ORE": 0
+    }
+
+    cur_level_chems = ["ORE"]
+    next_level = 1
+    while True:
+        n_elements = len(elements)
+        # loop alle formules door
+        for product, recipe in formulas.items():
+            ingredients = []
+            # voor elke formule, loop de ingredienten langs
+            for ingredient in recipe:
+                ingredients.append(ingredient.split(" ")[1])
+                # als alle ingredienten in deze formule maximaal van het laatst bepaalde niveau zijn, dan is het product
+                # een element van een niveau hoger. In dat geval moet het worden toegevoegd aan de dictionary.
+            if all(i in elements and elements[i] < next_level for i in ingredients):
+                new_element = product.split(" ")[1]
+                if new_element not in elements:
+                    elements[new_element] = next_level
+        cur_level_chems = []
+        for ingredient, level in elements.items():
+            if level == next_level:
+                cur_level_chems.append(ingredient)
+        if "FUEL" in elements:
+            return elements
+        next_level += 1
+
+
+
+
 def deduplicate(cost):
     admin = {}
     for chem in cost:
@@ -74,6 +107,7 @@ with open('testinput.txt') as f:
     data = f.read().split("\n")
 
 formulas = get_formulas(data)
+elements = get_hierarchy(formulas)
 
 print("formulas:")
 for key, value in formulas.items():
@@ -106,7 +140,7 @@ while True:
         if cost[i].type not in base_elements:
             addition = cost[i].cost
             cost.pop(i)
-            cost.extend(addition)
+            cost.extend(addition) # deze volgorde maakt uit!
             break
     if stop:
         break
@@ -132,6 +166,7 @@ pass
 
 n_ore = 0
 for chem in amount_needed:
+    print(chem.n)
     n_ore += chem.n
 
 print(n_ore)
