@@ -119,7 +119,7 @@ def deduplicate(cost):
         cost_updated.append(Chemical(type=key, n=value))
     return cost_updated
 
-with open('testinput.txt') as f:
+with open('input.txt') as f:
     data = f.read().split("\n")
 
 formulas = get_formulas(data)
