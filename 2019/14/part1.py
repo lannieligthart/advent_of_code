@@ -11,6 +11,34 @@ def get_formulas(data):
             formulas[d[1]] = [d[0]]
     return formulas
 
+def get_hierarchy(formulas):
+    # dict to store elements and their level
+    elements = {
+        "ORE": 0
+    }
+    next_level = 1
+    while True:
+        n_elements = len(elements)
+        # loop alle formules door
+        for product, recipe in formulas.items():
+            ingredients = []
+            # voor elke formule, loop de ingredienten langs
+            for ingredient in recipe:
+                ingredients.append(ingredient.split(" ")[1])
+                # als alle ingredienten in deze formule maximaal van het laatst bepaalde niveau zijn, dan is het product
+                # een element van een niveau hoger. In dat geval moet het worden toegevoegd aan de dictionary.
+            if all(i in elements and elements[i] < next_level for i in ingredients):
+                new_element = product.split(" ")[1]
+                if new_element not in elements:
+                    elements[new_element] = next_level
+        cur_level_chems = []
+        for ingredient, level in elements.items():
+            if level == next_level:
+                cur_level_chems.append(ingredient)
+        if "FUEL" in elements:
+            return elements
+        next_level += 1
+
 leftover = {}
 
 class Chemical():
@@ -53,7 +81,7 @@ class Chemical():
                         elif c.n > leftover[c.type]:
                             c.n -= leftover[c.type]
                             leftover[c.type] = 0
-                return multiplied_cost
+                 return multiplied_cost
 
     @staticmethod
     def parse(string):
@@ -75,38 +103,6 @@ def get_base_elements(formulas):
             base_elements.append(element)
     return base_elements
 
-# def get_hierarchy(formulas):
-#     # dict to store elements and their level
-#     elements = {
-#         "ORE": 0
-#     }
-#
-#     cur_level_chems = ["ORE"]
-#     next_level = 1
-#     while True:
-#         n_elements = len(elements)
-#         # loop alle formules door
-#         for product, recipe in formulas.items():
-#             ingredients = []
-#             # voor elke formule, loop de ingredienten langs
-#             for ingredient in recipe:
-#                 ingredients.append(ingredient.split(" ")[1])
-#                 # als alle ingredienten in deze formule maximaal van het laatst bepaalde niveau zijn, dan is het product
-#                 # een element van een niveau hoger. In dat geval moet het worden toegevoegd aan de dictionary.
-#             if all(i in elements and elements[i] < next_level for i in ingredients):
-#                 new_element = product.split(" ")[1]
-#                 if new_element not in elements:
-#                     elements[new_element] = next_level
-#         cur_level_chems = []
-#         for ingredient, level in elements.items():
-#             if level == next_level:
-#                 cur_level_chems.append(ingredient)
-#         if "FUEL" in elements:
-#             return elements
-#         next_level += 1
-
-
-
 
 def deduplicate(cost):
     admin = {}
@@ -126,7 +122,7 @@ with open('testinput.txt') as f:
     data = f.read().split("\n")
 
 formulas = get_formulas(data)
-# elements = get_hierarchy(formulas)
+
 
 print("formulas:")
 for key, value in formulas.items():
@@ -147,7 +143,7 @@ while True:
     # Check of alle elementen in cost een basiselement zijn. Zo niet, dan moet de loop door blijven lopen.
     n_base = 0
     for chem in cost:
-        if chem.type in base_elements:
+        if chem.type in ["ORE"]:
             n_base += 1
     if n_base == len(cost):
         stop = True  # indien True, dan stopt de loop aan het eind.
@@ -156,7 +152,7 @@ while True:
         # bij het begin begint, waardoor elk element eerst helemaal wordt doorlopen tot het basiselement alvorens verder
         # te gaan naar het volgende. Ik weet niet of dit de goede strategie is. Break weghalen maakt in elk geval wel
         # voorbeeld 4 stuk.
-        if cost[i].type not in base_elements:
+        if cost[i].type not in ["ORE"]:
             addition = cost[i].cost
             cost.pop(i)
             cost.extend(addition) # deze volgorde maakt uit!
@@ -164,33 +160,39 @@ while True:
     if stop:
         break
 
-final_cost = []
-required = {}
-for e in base_elements:
-    required[e] = 0
-    
-cost = deduplicate(cost)
-for c in cost:
-    required[c.type] += c.n
-print("total required:")
-for key, value in required.items():
-    print(key, value)
-for key, value in required.items():
-    final_cost.append(Chemical(value, key))
 
-amount_needed = []
-for chem in final_cost:
-    amount_needed.extend(chem.cost)
-pass
 
-n_ore = 0
-for chem in amount_needed:
-    print(chem.n)
-    n_ore += chem.n
+# final_cost = []
+# required = {}
+# for e in base_elements:
+#     required[e] = 0
+#
+# cost = deduplicate(cost)
+# for c in cost:
+#     required[c.type] += c.n
+# print("total required:")
+# for key, value in required.items():
+#     print(key, value)
+# for key, value in required.items():
+#     final_cost.append(Chemical(value, key))
+#
+# amount_needed = []
+# for chem in final_cost:
+#     amount_needed.extend(chem.cost)
+# pass
+#
+# n_ore = 0
+# for chem in amount_needed:
+#     print(chem.n)
+#     n_ore += chem.n
+#
+# for key, value in leftover.items():
+#     print(key, value)
+#
+# print(n_ore)
 
-print(n_ore)
 
-supply = amount_needed.copy()
 
 
 # 366644 niet correct ( too high).
+# moet zijn 365768, maar hoe?
