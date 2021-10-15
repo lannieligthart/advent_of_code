@@ -52,6 +52,7 @@ class Chemical():
 
     @property
     def cost(self):
+        """based on self.n and self.type, calculates the cost of this element given the N required."""
         for key, value in formulas.items():
             if self.type in key:
                 # convert strings to chemicals
@@ -81,7 +82,7 @@ class Chemical():
                         elif c.n > leftover[c.type]:
                             c.n -= leftover[c.type]
                             leftover[c.type] = 0
-                 return multiplied_cost
+                return multiplied_cost
 
     @staticmethod
     def parse(string):
@@ -129,17 +130,32 @@ for key, value in formulas.items():
     print(key, value)
 print("\n")
 
-# bepaal wat de basiselementen zijn (A en B)
-base_elements = get_base_elements(formulas)
+levels = get_hierarchy(formulas)
 
 # startpunt
 cost = [Chemical.parse("1 FUEL")]
+
+def sort_cost(cost, levels):
+    # sorteer cost op basis van welk level elk element is (begin met elementen dichtst bij FUEL).
+    # cost is een lijst van chemicals die we dus moeten sorteren.
+    maxlevel = levels["FUEL"]
+    i = maxlevel
+    cost_sorted = []
+    while i >= 0:
+        for c in cost:
+            if levels[c.type] == i:
+                cost_sorted.append(c)
+        i -= 1
+    return cost_sorted
 
 stop = False
 while True:
     # show current cost
     cost = deduplicate(cost) # deze stap is nodig voor voorbeeld 4
     print(" ".join([str(c) for c in cost]))
+    cost = sort_cost(cost, levels)
+
+
     # Check of alle elementen in cost een basiselement zijn. Zo niet, dan moet de loop door blijven lopen.
     n_base = 0
     for chem in cost:
@@ -159,39 +175,6 @@ while True:
             break
     if stop:
         break
-
-
-
-# final_cost = []
-# required = {}
-# for e in base_elements:
-#     required[e] = 0
-#
-# cost = deduplicate(cost)
-# for c in cost:
-#     required[c.type] += c.n
-# print("total required:")
-# for key, value in required.items():
-#     print(key, value)
-# for key, value in required.items():
-#     final_cost.append(Chemical(value, key))
-#
-# amount_needed = []
-# for chem in final_cost:
-#     amount_needed.extend(chem.cost)
-# pass
-#
-# n_ore = 0
-# for chem in amount_needed:
-#     print(chem.n)
-#     n_ore += chem.n
-#
-# for key, value in leftover.items():
-#     print(key, value)
-#
-# print(n_ore)
-
-
 
 
 # 366644 niet correct ( too high).
