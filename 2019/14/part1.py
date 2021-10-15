@@ -11,6 +11,8 @@ def get_formulas(data):
             formulas[d[1]] = [d[0]]
     return formulas
 
+leftover = {}
+
 class Chemical():
 
     def __init__(self, n, type):
@@ -33,7 +35,24 @@ class Chemical():
                 else:
                     factor = 1
                 multiplied_cost = [c.multiply(factor) for c in unit_cost]
-                # units of production
+                # handle leftovers
+                remainder = factor*n_returned - self.n
+                if self.type in leftover:
+                    leftover[self.type] += remainder
+                else:
+                    leftover[self.type] = remainder
+                print("Need", self.n, self.type)
+                print(factor, "reactions produces", factor*n_returned)
+                print("leftover:", factor*n_returned - self.n)
+                ### check if any of the ingredients are still in stock. If so, these can be deduced from multiplied_costs.
+                for c in multiplied_cost:
+                    if c.type in leftover:
+                        if c.n <= leftover[c.type]:
+                            leftover[c.type] -= c.n
+                            c.n = 0
+                        elif c.n > leftover[c.type]:
+                            c.n -= leftover[c.type]
+                            leftover[c.type] = 0
                 return multiplied_cost
 
     @staticmethod
@@ -56,35 +75,35 @@ def get_base_elements(formulas):
             base_elements.append(element)
     return base_elements
 
-def get_hierarchy(formulas):
-    # dict to store elements and their level
-    elements = {
-        "ORE": 0
-    }
-
-    cur_level_chems = ["ORE"]
-    next_level = 1
-    while True:
-        n_elements = len(elements)
-        # loop alle formules door
-        for product, recipe in formulas.items():
-            ingredients = []
-            # voor elke formule, loop de ingredienten langs
-            for ingredient in recipe:
-                ingredients.append(ingredient.split(" ")[1])
-                # als alle ingredienten in deze formule maximaal van het laatst bepaalde niveau zijn, dan is het product
-                # een element van een niveau hoger. In dat geval moet het worden toegevoegd aan de dictionary.
-            if all(i in elements and elements[i] < next_level for i in ingredients):
-                new_element = product.split(" ")[1]
-                if new_element not in elements:
-                    elements[new_element] = next_level
-        cur_level_chems = []
-        for ingredient, level in elements.items():
-            if level == next_level:
-                cur_level_chems.append(ingredient)
-        if "FUEL" in elements:
-            return elements
-        next_level += 1
+# def get_hierarchy(formulas):
+#     # dict to store elements and their level
+#     elements = {
+#         "ORE": 0
+#     }
+#
+#     cur_level_chems = ["ORE"]
+#     next_level = 1
+#     while True:
+#         n_elements = len(elements)
+#         # loop alle formules door
+#         for product, recipe in formulas.items():
+#             ingredients = []
+#             # voor elke formule, loop de ingredienten langs
+#             for ingredient in recipe:
+#                 ingredients.append(ingredient.split(" ")[1])
+#                 # als alle ingredienten in deze formule maximaal van het laatst bepaalde niveau zijn, dan is het product
+#                 # een element van een niveau hoger. In dat geval moet het worden toegevoegd aan de dictionary.
+#             if all(i in elements and elements[i] < next_level for i in ingredients):
+#                 new_element = product.split(" ")[1]
+#                 if new_element not in elements:
+#                     elements[new_element] = next_level
+#         cur_level_chems = []
+#         for ingredient, level in elements.items():
+#             if level == next_level:
+#                 cur_level_chems.append(ingredient)
+#         if "FUEL" in elements:
+#             return elements
+#         next_level += 1
 
 
 
@@ -107,7 +126,7 @@ with open('testinput.txt') as f:
     data = f.read().split("\n")
 
 formulas = get_formulas(data)
-elements = get_hierarchy(formulas)
+# elements = get_hierarchy(formulas)
 
 print("formulas:")
 for key, value in formulas.items():
@@ -170,3 +189,8 @@ for chem in amount_needed:
     n_ore += chem.n
 
 print(n_ore)
+
+supply = amount_needed.copy()
+
+
+# 366644 niet correct ( too high).
