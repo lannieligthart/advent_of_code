@@ -176,6 +176,5 @@ while True:
     if stop:
         break
 
-
-# 366644 niet correct ( too high).
-# moet zijn 365768, maar hoe?
+n_ore = cost[0].n
+assert n_ore == 365768
