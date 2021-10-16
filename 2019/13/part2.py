@@ -1,11 +1,11 @@
 import sys
-sys.path.append("C:/Users/Admin/Documents/Code/advent_of_code/2019/13")
-sys.path.append("C:/Users/Admin/Documents/Code/advent_of_code/AoC_tools")
+sys.path.append("C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/13")
+sys.path.append("C:/Users/Admin/SURFdrive/Code/advent_of_code/AoC_tools")
 import IntCode as ic
 from aoc_tools import display_grid
 import time
 
-code = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/13/input.txt')
+code = ic.parse_code('C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/13/input.txt')
 # play for free
 code[0] = 2
 prog = ic.Intcode(code)

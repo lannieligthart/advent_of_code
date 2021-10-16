@@ -1,6 +1,6 @@
 import unittest
 import sys
-sys.path.append("C:/Users/Admin/Documents/Code/advent_of_code/2019/5")
+sys.path.append("C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/5")
 import IntCode as ic
 import itertools
 
@@ -8,13 +8,13 @@ import itertools
 class TestOpcodes(unittest.TestCase):
 
     def test_day2_testinput2(self):
-        code_day2 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/testinput2.txt')
+        code_day2 = ic.parse_code('C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/5/testinput2.txt')
         day2 = ic.Intcode(code_day2)
         day2.run()
         self.assertEqual({0: 1101, 1: 100, 2: -1, 3: 4, 4: 99}, day2.code)
 
     def test_day5_testinput(self):
-        testcode_day5 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/testinput.txt')
+        testcode_day5 = ic.parse_code('C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/5/testinput.txt')
         day5test = ic.Intcode(testcode_day5)
         self.assertEqual({0: 1002, 1: 4, 2: 3, 3: 4, 4: 33}, day5test.code)
         day5test.run()
@@ -122,19 +122,19 @@ class TestOpcodes(unittest.TestCase):
         self.assertEqual(66, prog.run(66))
 
     def test_day2_part1(self):
-        code_day2 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/2/input.txt')
+        code_day2 = ic.parse_code('C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/2/input.txt')
         day2 = ic.Intcode(code_day2)
         day2.run(value1=12, value2=2, reset=False)
         self.assertEqual(day2.code[0], 3101878)
 
     def test_day2_part2(self):
-        code_day2 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/2/input.txt')
+        code_day2 = ic.parse_code('C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/2/input.txt')
         day2 = ic.Intcode(code_day2)
         day2.run(value1=84, value2=44)
         self.assertEqual(19690720, day2.code[0])
 
     def test_day5_part1(self):
-        code_day5 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/input.txt')
+        code_day5 = ic.parse_code('C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/5/input.txt')
         day5 = ic.Intcode(code_day5)
         while True:
             result = day5.run(input=1, reset=False, return_last=True)
@@ -143,7 +143,7 @@ class TestOpcodes(unittest.TestCase):
         self.assertEqual(result, 14155342)
 
     def test_day5_part2(self):
-        code_day5 = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/5/input.txt')
+        code_day5 = ic.parse_code('C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/5/input.txt')
         day5 = ic.Intcode(code_day5)
         result = day5.run(input=5, return_last=True)
         self.assertEqual(8684145, result)
@@ -213,7 +213,7 @@ class TestOpcodes(unittest.TestCase):
 
 
     def test_day7_part1(self):
-        code = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/7/input.txt')
+        code = ic.parse_code('C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/7/input.txt')
         seq = list(itertools.permutations(range(5), 5))
         results = []
         for s in seq:
@@ -228,7 +228,7 @@ class TestOpcodes(unittest.TestCase):
         self.assertEqual(result, 366376)
 
     def test_day7_part2(self):
-        code = ic.parse_code('C:/Users/Admin/Documents/Code/advent_of_code/2019/7/input.txt')
+        code = ic.parse_code('C:/Users/Admin/SURFdrive/Code/advent_of_code/2019/7/input.txt')
         seqs = list(itertools.permutations(range(5, 10), 5))
         max_results = []
         for seq in seqs:
