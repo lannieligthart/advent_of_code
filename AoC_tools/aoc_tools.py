@@ -4,18 +4,18 @@ def display_grid(positions, lookup_table):
     x_range = [p[0] for p in positions]
     y_range = [p[1] for p in positions]
 
-    #print(min(x_range), max(x_range))
-    #print(min(y_range), max(y_range))
+#    print(min(x_range), max(x_range))
+#    print(min(y_range), max(y_range))
 
     dim_x = max(x_range) + abs(min(x_range))
     dim_y = max(y_range) + abs(min(y_range))
     #print(dim_x, dim_y)
 
     cols = [i for i in range(min(x_range), max(x_range)+1)]
-    index = [i for i in range(max(y_range), min(y_range)-1)]
+    index = [i for i in range(max(y_range), min(y_range)-1, -1)]
 
-    #print(cols)
-    #print(index)
+#    print(cols)
+#    print(index)
 
     import pandas as pd
     #
