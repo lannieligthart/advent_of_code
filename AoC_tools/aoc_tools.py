@@ -1,6 +1,6 @@
-def display_grid(positions, lookup_table):
+def display_grid(positions, lookup_table=None):
     """takes two dictionaries as input: positions with their values, and a lookup table that specifies
-    how each value should be visualized"""
+    how each value should be visualized. If value should simply be visualized as itself, no lookup table is needed."""
     x_range = [p[0] for p in positions]
     y_range = [p[1] for p in positions]
 
@@ -23,10 +23,15 @@ def display_grid(positions, lookup_table):
     for col in grid.columns:
         grid[col].values[:] = ' '
 
-    for p in positions:
-        for key, value in lookup_table.items():
-            if positions[p] == key:
-                grid.loc[p[1], p[0]] = value
+    if lookup_table is None:
+        for key, value in positions.items():
+            grid.loc[key[1], key[0]] = value
+
+    elif lookup_table is not None:
+        for p in positions:
+            for key, value in lookup_table.items():
+                if positions[p] == key:
+                    grid.loc[p[1], p[0]] = value
 
     lol = grid.values.tolist()
     for l in lol:
