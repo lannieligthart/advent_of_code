@@ -16,7 +16,7 @@ def display_grid(positions, lookup_table=None):
     #print(dim_x, dim_y)
 
     cols = [i for i in range(min(x_range), max(x_range)+1)]
-    index = [i for i in range(max(y_range), min(y_range)-1, -1)]
+    index = [i for i in range(min(y_range), max(y_range)+1)]
 
 #    print(cols)
 #    print(index)
@@ -96,6 +96,18 @@ def read_grid(path, display=True):
     separate line in the text file. Returns the grid dictionary used as input for the display function."""
     data = lines2list(path, display=False)
     data = [[char for char in line] for line in data]
+    positions = {}
+    for i in range(len(data)):
+        for j in range(len(data[i])):
+            positions[(i, j)] = data[i][j]
+    if display:
+        print("Your grid looks like this:")
+        display_grid(positions)
+        print("")
+    return positions
+
+def make_grid(data, display=True):
+    #data = [[char for char in line] for line in lol]
     positions = {}
     for i in range(len(data)):
         for j in range(len(data[i])):
