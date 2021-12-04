@@ -1,6 +1,6 @@
 import AoC_tools.aoc_tools as aoc
 
-data = aoc.string2list(path="C:/Users/Admin/SURFdrive/Code/advent_of_code/2021/4/input.txt", sep="\n\n")
+data = aoc.string2list(path="C:/Users/Admin/SURFdrive/Code/advent_of_code/2021/4/testinput.txt", sep="\n\n")
 aoc.lprint(data)
 print(len(data))
 
@@ -13,7 +13,8 @@ for i in range(len(tmp)):
     b = [(line.split()) for line in tmp[i]]
     print(b)
     boards.append(b)
-    #aoc.make_grid(b)
+    grid = aoc.Grid.make(b, rowsep=',', colsep=',')
+    grid.display()
 
 class Bingo():
 

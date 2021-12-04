@@ -1,45 +1,8 @@
 import os
+import pandas as pd
 
 aocdir = "C:/Users/Admin/SURFdrive/Code/advent_of_code"
 
-def display_grid(positions, lookup_table=None):
-    """takes two dictionaries as input: positions with their values, and a lookup table that specifies
-    how each value should be visualized. If value should simply be visualized as itself, no lookup table is needed."""
-    x_range = [p[0] for p in positions]
-    y_range = [p[1] for p in positions]
-
-#    print(min(x_range), max(x_range))
-#    print(min(y_range), max(y_range))
-
-    dim_x = max(x_range) + abs(min(x_range))
-    dim_y = max(y_range) + abs(min(y_range))
-    #print(dim_x, dim_y)
-
-    cols = [i for i in range(min(x_range), max(x_range)+1)]
-    index = [i for i in range(min(y_range), max(y_range)+1)]
-
-#    print(cols)
-#    print(index)
-
-    import pandas as pd
-    #
-    grid = pd.DataFrame(columns=cols, index=index)
-    for col in grid.columns:
-        grid[col].values[:] = ' '
-
-    if lookup_table is None:
-        for key, value in positions.items():
-            grid.loc[key[1], key[0]] = value
-
-    elif lookup_table is not None:
-        for p in positions:
-            for key, value in lookup_table.items():
-                if positions[p] == key:
-                    grid.loc[p[1], p[0]] = value
-
-    lol = grid.values.tolist()
-    for l in lol:
-        print(" ".join(l))
 
 def lprint(list):
     """prints the elements of a list on separate lines (e.g. for lists with custom objects in them"""
@@ -91,29 +54,104 @@ def split_list(data, sep=" "):
         data[i] = data[i].split(sep)
     return data
 
-def read_grid(path, display=True):
-    """reads a text file representing a grid; assumes each row of the grid is on a
-    separate line in the text file. Returns the grid dictionary used as input for the display function."""
-    data = lines2list(path, display=False)
-    data = [[char for char in line] for line in data]
-    positions = {}
-    for i in range(len(data)):
-        for j in range(len(data[i])):
-            positions[(i, j)] = data[i][j]
-    if display:
-        print("Your grid looks like this:")
-        display_grid(positions)
-        print("")
-    return positions
 
-def make_grid(data, display=True):
-    #data = [[char for char in line] for line in lol]
-    positions = {}
-    for i in range(len(data)):
-        for j in range(len(data[i])):
-            positions[(i, j)] = data[i][j]
-    if display:
-        print("Your grid looks like this:")
-        display_grid(positions)
-        print("")
-    return positions
+class Grid(object):
+
+    def __init__(self, positions, lookup_table=None):
+        self.positions = positions
+        self.lookup_table = lookup_table
+
+    @staticmethod
+    def make(data, rowsep='\n', colsep=" "):
+        """takes a list of lists, a list of strings, or a single string and returns a grid"""
+        #print("\ninput:")
+        #print(data, "\n")
+        if isinstance(data, str):
+            # if data is a single string, it should be converted to a list of lists using the separators.
+            rows = data.split(rowsep)
+            data = [row.split(colsep) for row in rows]
+        elif isinstance(data, list):
+            # if the elements of the lists are not lists themselves, split them up into lists.
+            if isinstance(data[0], str):
+                data = [row.split(colsep) for row in data]
+        positions = {}
+        # rows
+        for i in range(len(data)):
+            # columns
+            for j in range(len(data[i])):
+                positions[(i, j)] = data[i][j]
+        return Grid(positions)
+
+    @property
+    def x_min(self):
+        """lowest value on x-axis"""
+        x_values = [p[0] for p in self.positions]
+        return min(x_values)
+
+    @property
+    def x_max(self):
+        """highest value on x-axis"""
+        x_values = [p[0] for p in self.positions]
+        return max(x_values)
+
+    @property
+    def x_range(self):
+        return (self.x_min, self.x_max)
+
+    @property
+    def y_min(self):
+        """lowest value on y-axis"""
+        y_values = [p[0] for p in self.positions]
+        return min(y_values)
+
+    @property
+    def y_max(self):
+        """highest value on y-axis"""
+        y_values = [p[0] for p in self.positions]
+        return max(y_values)
+
+    @property
+    def y_range(self):
+        return (self.y_min, self.y_max)
+
+    @property
+    def dim(self):
+        dim_x = self.x_max + abs(self.x_min) + 1
+        dim_y = self.y_max + abs(self.y_min) + 1
+        return (dim_x, dim_y)
+
+    def display(self, show=True):
+        # column indices always run from low to high
+        cols = [i for i in range(self.x_min, self.x_max + 1)]
+
+        if self.x_min < 0:
+        # if the grid has positive values as well as negative ones, the y-axis values go from high to low.
+            index = [i for i in range(self.y_max, self.y_min - 1, -1)]
+        # if the grid only has positive values, the axis values behave like those in the lower right quadrant, except
+        # the y-axis values go from low to high
+        else:
+            index = [i for i in range(self.y_min, self.y_max + 1)]
+
+        grid = pd.DataFrame(columns=cols, index=index)
+
+        # first, fill up with emtpy strings
+        for col in grid.columns:
+            grid[col].values[:] = ' '
+
+        if self.lookup_table is None:
+            for key, value in self.positions.items():
+                grid.loc[key[0], key[1]] = value
+
+        elif self.lookup_table is not None:
+            for p in self.positions:
+                for key, value in self.lookup_table.items():
+                    if self.positions[p] == key:
+                        grid.loc[p[0], p[1]] = value
+
+        lol = grid.values.tolist()
+        image = ""
+        for l in lol:
+            image += " ".join(l) + "\n"
+        if show:
+            print(image)
+        return(image)
