@@ -140,13 +140,13 @@ class Grid(object):
 
         if self.lookup_table is None:
             for key, value in self.positions.items():
-                grid.loc[key[0], key[1]] = value
+                grid.loc[key[0], key[1]] = str(value)
 
         elif self.lookup_table is not None:
             for p in self.positions:
                 for key, value in self.lookup_table.items():
                     if self.positions[p] == key:
-                        grid.loc[p[0], p[1]] = value
+                        grid.loc[p[0], p[1]] = str(value)
 
         lol = grid.values.tolist()
         image = ""
