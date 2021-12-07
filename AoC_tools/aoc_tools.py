@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import time
 
 aocdir = "C:/Users/Admin/SURFdrive/Code/advent_of_code"
 
@@ -48,6 +49,15 @@ def string2list(path, sep=" ", numeric=False, display=True):
         print("")
     return data
 
+def sorted_print(dict, by='key'):
+    """prints a dictionary sorted by key"""
+    if by == 'key':
+        for key, value in sorted(dict.items(), key=lambda x: x[0]):
+            print(f"{key} : {value}")
+    elif by == 'value':
+        for key, value in sorted(dict.items(), key=lambda x: x[1]):
+            print(f"{key} : {value}")
+
 def split_list(data, sep=" "):
     """further splits the elements of a list, creating a list of lists"""
     for i in range(len(data)):
@@ -57,9 +67,10 @@ def split_list(data, sep=" "):
 
 class Grid(object):
 
-    def __init__(self, positions, lookup_table=None):
+    def __init__(self, positions, empty=' ', lookup_table=None):
         self.positions = positions
         self.lookup_table = lookup_table
+        self.empty = empty
 
     @staticmethod
     def make(data, rowsep='\n', colsep=" "):
@@ -120,12 +131,13 @@ class Grid(object):
         dim_y = self.y_max + abs(self.y_min) + 1
         return (dim_x, dim_y)
 
-    def display(self, show=True):
+    @property
+    def grid(self):
         # column indices always run from low to high
         cols = [i for i in range(self.x_min, self.x_max + 1)]
 
         if self.x_min < 0:
-        # if the grid has positive values as well as negative ones, the y-axis values go from high to low.
+            # if the grid has positive values as well as negative ones, the y-axis values go from high to low.
             index = [i for i in range(self.y_max, self.y_min - 1, -1)]
         # if the grid only has positive values, the axis values behave like those in the lower right quadrant, except
         # the y-axis values go from low to high
@@ -136,7 +148,7 @@ class Grid(object):
 
         # first, fill up with emtpy strings
         for col in grid.columns:
-            grid[col].values[:] = ' '
+            grid[col].values[:] = self.empty
 
         if self.lookup_table is None:
             for key, value in self.positions.items():
@@ -147,7 +159,14 @@ class Grid(object):
                 for key, value in self.lookup_table.items():
                     if self.positions[p] == key:
                         grid.loc[p[0], p[1]] = str(value)
+        return grid
 
+    def display(self, transpose=False, show=True):
+        """print the grid to console, with option to transpose it"""
+        if transpose:
+            grid = self.grid.T
+        else:
+            grid = self.grid
         lol = grid.values.tolist()
         image = ""
         for l in lol:
@@ -155,3 +174,11 @@ class Grid(object):
         if show:
             print(image)
         return(image)
+
+
+def start():
+    return time.time()
+
+def end(start_time):
+    executionTime = (time.time() - start_time)
+    print('Execution time in seconds: ' + str(executionTime))
