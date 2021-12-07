@@ -1,5 +1,7 @@
 import AoC_tools.aoc_tools as aoc
 
+st = aoc.start()
+
 data = aoc.lines2list(path="C:/Users/Admin/SURFdrive/Code/advent_of_code/2021/5/input.txt")
 data = aoc.split_list(data, sep=" -> ")
 #print(data)
@@ -9,8 +11,7 @@ for i in range(len(data)):
 #print(data)
 
 lines = data
-#print(lines)
-
+print(lines)
 
 # expand lines
 
@@ -22,17 +23,17 @@ def expand(line):
     dif_y = abs(y1 - y2)
     dif = max(dif_x, dif_y)
     for i in range(dif + 1):
-        if y2-y1 > 0:
+        if y2 - y1 > 0:
             i_y = i
         elif y2-y1 < 0:
             i_y = -i
-        elif y2==y1:
+        elif y2 == y1:
             i_y = 0
         if x2-x1 > 0:
             i_x = i
         elif x2-x1 < 0:
             i_x = -i
-        elif x2==x1:
+        elif x2 == x1:
             i_x = 0
         newline.append((x1 + i_x, y1 + i_y))
     return newline
@@ -40,7 +41,7 @@ def expand(line):
 for i in range(len(lines)):
     lines[i] = expand(lines[i])
 
-aoc.lprint(lines)
+#aoc.lprint(lines)
 
 positions = {}
 
@@ -51,10 +52,8 @@ for l in lines:
         elif p in positions:
             positions[p] += 1
 
-#print(positions)
-
-grid = aoc.Grid(positions)
-#grid.display()
+#grid = aoc.Grid(positions, empty=".")
+#grid.display(transpose=True)
 
 # aantal punten met minstens waarde 2:
 
@@ -63,9 +62,11 @@ for key, value in positions.items():
     if value >= 2:
         danger_points += 1
 
-print(danger_points)
+#print(danger_points)
 
 from collections import Counter
-print(Counter(positions.values()))
+#print(Counter(positions.values()))
 
 assert danger_points == 19571
+
+aoc.end(st)

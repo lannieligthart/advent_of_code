@@ -84,6 +84,21 @@ C X X X D
 """
         self.assertEqual(image, expected)
 
+    def test_display_transpose(self):
+        data = """A X X X B
+X X X X X
+o o o o o
+X X X X X
+C X X X D"""
+        grid = aoc.Grid.make(data)
+        image = grid.display(transpose=True)
+        expected = """A X o X C
+X X o X X
+X X o X X
+X X o X X
+B X o X D
+"""
+        self.assertEqual(image, expected)
 
 if __name__ == '__main__':
     unittest.main()

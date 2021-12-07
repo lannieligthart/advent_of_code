@@ -1,6 +1,6 @@
 import AoC_tools.aoc_tools as aoc
 
-data = aoc.lines2list(path="C:/Users/Admin/SURFdrive/Code/advent_of_code/2021/5/input.txt")
+data = aoc.lines2list(path="C:/Users/Admin/SURFdrive/Code/advent_of_code/2021/5/testinput.txt")
 data = aoc.split_list(data, sep=" -> ")
 #print(data)
 for i in range(len(data)):
@@ -56,8 +56,8 @@ for l in lines:
 
 #print(positions)
 
-grid = aoc.Grid(positions)
-#grid.display()
+grid = aoc.Grid(positions, empty='.')
+#grid.display(transpose=True)
 
 # aantal punten met minstens waarde 2:
 
