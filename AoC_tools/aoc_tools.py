@@ -65,12 +65,32 @@ def split_list(data, sep=" "):
     return data
 
 
+def start():
+    return time.time()
+
+def end(start_time):
+    executionTime = (time.time() - start_time)
+    print('Execution time in seconds: ' + str(executionTime))
+
+
 class Grid(object):
 
-    def __init__(self, positions, empty=' ', lookup_table=None):
-        self.positions = positions
+    def __init__(self, positions, empty=' ', lookup_table=None, matrix=True):
+        """takes positions formatted in matrix style as (row, col). If positions are provided as (x,y) coordinates,
+        set matrix to True to reverse them upon creating the grid"""
+        self.positions = positions # dictionary with coordinates and corresponding values.
+        if not matrix:
+            self.reverse_positions()
         self.lookup_table = lookup_table
         self.empty = empty
+
+    def reverse_positions(self):
+        newdict = {}
+        for key, value in self.positions.items():
+            x, y = key
+            newkey = (y, x)
+            newdict[newkey] = value
+        self.positions = newdict
 
     @staticmethod
     def make(data, rowsep='\n', colsep=" "):
@@ -140,7 +160,7 @@ class Grid(object):
             # if the grid has positive values as well as negative ones, the y-axis values go from high to low.
             index = [i for i in range(self.y_max, self.y_min - 1, -1)]
         # if the grid only has positive values, the axis values behave like those in the lower right quadrant, except
-        # the y-axis values go from low to high
+        # the y-axis values go from low to high (essentially like a matrix).
         else:
             index = [i for i in range(self.y_min, self.y_max + 1)]
 
@@ -175,10 +195,70 @@ class Grid(object):
             print(image)
         return(image)
 
+# TODO: integrate Point class in Grid, so a Grid contains Points instead of positions.
 
-def start():
-    return time.time()
+class Point():
 
-def end(start_time):
-    executionTime = (time.time() - start_time)
-    print('Execution time in seconds: ' + str(executionTime))
+    def __init__(self, pos, value):
+        self.x = pos[0]
+        self.y = pos[1]
+        self.value = int(value)
+
+    def __str__(self):
+        return f"({self.x}, {self.y}): {self.value}"
+
+    @property
+    def position(self):
+        return (self.x, self.y)
+
+    @property
+    def N(self):
+        return (self.x - 1, self.y)
+
+    @property
+    def S(self):
+        return (self.x + 1, self.y)
+
+    @property
+    def W(self):
+        return (self.x, self.y - 1)
+
+    @property
+    def E(self):
+        return (self.x, self.y + 1)
+
+
+    def get_neighbours(self, grid):
+        """obtain a point's neighbours' coordinates and values based on grid info.
+        First gets the neighbour's position based on NESW properties, then retrieves the values from
+        grid.positions, which is a dictionary of positions with their corresponding values."""
+        neighbours = []
+        #print("neighbours:")
+        try:
+            neighbour_S = Point(self.S, grid.positions[self.S])
+            #print("South: ", neighbour_S)
+            neighbours.append(neighbour_S)
+        except KeyError as e:
+            pass
+        try:
+            neighbour_E = Point(self.E, grid.positions[self.E])
+            #print("East: ", neighbour_E)
+            neighbours.append(neighbour_E)
+        except KeyError as e:
+            pass
+        try:
+            neighbour_N = Point(self.N, grid.positions[self.N])
+            #print("North: ", neighbour_N)
+            neighbours.append(neighbour_N)
+        except KeyError as e:
+            pass
+        try:
+            neighbour_W = Point(self.W, grid.positions[self.W])
+            #print("West: ", neighbour_W)
+            neighbours.append(neighbour_W)
+        except KeyError as e:
+            pass
+        return neighbours
+
+
+
