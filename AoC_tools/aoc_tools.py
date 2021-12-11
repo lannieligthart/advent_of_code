@@ -99,8 +99,16 @@ class Grid(object):
         #print(data, "\n")
         if isinstance(data, str):
             # if data is a single string, it should be converted to a list of lists using the separators.
+            data_new = []
             rows = data.split(rowsep)
-            data = [row.split(colsep) for row in rows]
+            for row in rows:
+                row = row.split(colsep)
+                # If row elements are not separated, split them
+                if len(row) == 1:
+                    row = [char for char in row[0]]
+                data_new.append(row)
+            data = data_new
+            #data = [row.split(colsep) for row in rows]
         elif isinstance(data, list):
             # if the elements of the lists are not lists themselves, split them up into lists.
             if isinstance(data[0], str):

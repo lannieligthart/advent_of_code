@@ -56,6 +56,22 @@ C X X X D
 """
         self.assertEqual(image, expected)
 
+    def test_read_string_without_sep(self):
+        data = """AXXXB
+XXXXX
+ooooo
+XXXXX
+CXXXD"""
+        grid = aoc.Grid.make(data)
+        image = grid.display()
+        expected = """A X X X B
+X X X X X
+o o o o o
+X X X X X
+C X X X D
+"""
+        self.assertEqual(image, expected)
+
     def test_read_list(self):
         data = ["A X X X B", "X X X X X", "o o o o o", "X X X X X", "C X X X D"]
         grid = aoc.Grid.make(data)
