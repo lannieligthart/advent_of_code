@@ -92,6 +92,11 @@ class Grid(object):
             newdict[newkey] = value
         self.positions = newdict
 
+
+    @property
+    def points(self):
+        return [Point(key, value) for key, value in self.positions.items()]
+
     @staticmethod
     def make(data, rowsep='\n', colsep=" "):
         """takes a list of lists, a list of strings, or a single string and returns a grid"""
