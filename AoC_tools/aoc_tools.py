@@ -37,6 +37,27 @@ def lines2list(path, numeric=False, display=True):
         print("")
     return data
 
+def lines2lol(path, numeric=False, display=True):
+    """converts a text file with multiple lines into a list with one element per line"""
+    with open(path) as f:
+        data = f.read().splitlines()
+    for i in range(len(data)):
+        tmp = data[i].split()
+        if len(tmp) == 1:
+            tmp = tmp[0]
+            if isinstance(tmp[0], str):
+                tmp = [char for char in tmp]
+        data[i] = tmp
+    if numeric:
+        for i in range(len(data)):
+            for j in range(len(data[i])):
+                data[i][j] = int(data[i][j])
+    if display:
+        print("Your input looks like this:")
+        print(data)
+        print("")
+    return data
+
 def string2list(path, sep=" ", numeric=False, display=True):
     """splits a single long string into a list"""
     with open(path) as f:
@@ -75,27 +96,15 @@ def end(start_time):
 
 class Grid(object):
 
-    def __init__(self, positions, empty=' ', lookup_table=None, matrix=True):
-        """takes positions formatted in matrix style as (row, col). If positions are provided as (x,y) coordinates,
-        set matrix to True to reverse them upon creating the grid"""
-        self.positions = positions # dictionary with coordinates and corresponding values.
-        if not matrix:
-            self.reverse_positions()
+    def __init__(self, positions, empty=' ', lookup_table=None, matrix=False):
+        """takes positions formatted in grid as (x, y). If positions are provided as (row,col),
+        all positions should be positive."""
+        # positions should be a dictionary with coordinates and corresponding values.
+        self.points = {key: Point(key, value) for key, value in positions.items()}
         self.lookup_table = lookup_table
         self.empty = empty
+        self.matrix = matrix
 
-    def reverse_positions(self):
-        newdict = {}
-        for key, value in self.positions.items():
-            x, y = key
-            newkey = (y, x)
-            newdict[newkey] = value
-        self.positions = newdict
-
-
-    @property
-    def points(self):
-        return [Point(key, value) for key, value in self.positions.items()]
 
     @staticmethod
     def make(data, rowsep='\n', colsep=" "):
@@ -120,22 +129,22 @@ class Grid(object):
                 data = [row.split(colsep) for row in data]
         positions = {}
         # rows
-        for i in range(len(data)):
+        for row in range(len(data)):
             # columns
-            for j in range(len(data[i])):
-                positions[(i, j)] = data[i][j]
-        return Grid(positions)
+            for col in range(len(data[row])):
+                positions[(col, row)] = data[col][row]
+        return Grid(positions, matrix=True)
 
     @property
     def x_min(self):
         """lowest value on x-axis"""
-        x_values = [p[0] for p in self.positions]
+        x_values = [point[0][0] for point in self.points.items()]
         return min(x_values)
 
     @property
     def x_max(self):
         """highest value on x-axis"""
-        x_values = [p[0] for p in self.positions]
+        x_values = [point[0][0] for point in self.points.items()]
         return max(x_values)
 
     @property
@@ -145,13 +154,13 @@ class Grid(object):
     @property
     def y_min(self):
         """lowest value on y-axis"""
-        y_values = [p[0] for p in self.positions]
+        y_values = [point[0][1] for point in self.points.items()]
         return min(y_values)
 
     @property
     def y_max(self):
         """highest value on y-axis"""
-        y_values = [p[0] for p in self.positions]
+        y_values = [point[0][1] for point in self.points.items()]
         return max(y_values)
 
     @property
@@ -169,30 +178,32 @@ class Grid(object):
         # column indices always run from low to high
         cols = [i for i in range(self.x_min, self.x_max + 1)]
 
-        if self.x_min < 0:
-            # if the grid has positive values as well as negative ones, the y-axis values go from high to low.
+        # in grid mode, the y-axis values go from high to low.
+        if self.x_min < 0 or (self.x_min >= 0 and not self.matrix):
             index = [i for i in range(self.y_max, self.y_min - 1, -1)]
-        # if the grid only has positive values, the axis values behave like those in the lower right quadrant, except
-        # the y-axis values go from low to high (essentially like a matrix).
-        else:
+            if self.x_min >= 0 and not self.matrix:
+                print('Grid only has positive values; if it was specified as a matrix (r,c), specify "matrix=True" '
+                      'for correct display.')
+        # in matrix mode, the y-axis values go from low to high.
+        elif self.matrix:
             index = [i for i in range(self.y_min, self.y_max + 1)]
 
-        grid = pd.DataFrame(columns=cols, index=index)
+        df = pd.DataFrame(columns=cols, index=index)
 
         # first, fill up with emtpy strings
-        for col in grid.columns:
-            grid[col].values[:] = self.empty
+        for col in df.columns:
+            df[col].values[:] = self.empty
 
         if self.lookup_table is None:
-            for key, value in self.positions.items():
-                grid.loc[key[0], key[1]] = str(value)
+            for point in self.points.values():
+                df.loc[point.position[0], point.position[1]] = str(point.value)
 
         elif self.lookup_table is not None:
-            for p in self.positions:
+            for p in self.points:
                 for key, value in self.lookup_table.items():
-                    if self.positions[p] == key:
-                        grid.loc[p[0], p[1]] = str(value)
-        return grid
+                    if p.position == key:
+                        df.loc[p[0], p[1]] = str(value)
+        return df
 
     def display(self, transpose=False, show=True):
         """print the grid to console, with option to transpose it"""
@@ -213,32 +224,52 @@ class Grid(object):
 class Point():
 
     def __init__(self, pos, value):
-        self.x = pos[0]
-        self.y = pos[1]
-        self.value = int(value)
+        self.row = pos[0]
+        self.col = pos[1]
+        try:
+            self.value = int(value)
+        except ValueError:
+            self.value = value
 
     def __str__(self):
-        return f"({self.x}, {self.y}): {self.value}"
+        return f"({self.row}, {self.col}): {self.value}"
 
     @property
     def position(self):
-        return (self.x, self.y)
+        return (self.row, self.col)
 
     @property
     def N(self):
-        return (self.x - 1, self.y)
+        return (self.row - 1, self.col)
 
     @property
     def S(self):
-        return (self.x + 1, self.y)
+        return (self.row + 1, self.col)
 
     @property
     def W(self):
-        return (self.x, self.y - 1)
+        return (self.row, self.col - 1)
 
     @property
     def E(self):
-        return (self.x, self.y + 1)
+        return (self.row, self.col + 1)
+
+
+    @property
+    def NE(self):
+        return (self.row - 1, self.col + 1)
+
+    @property
+    def SE(self):
+        return (self.row + 1, self.col + 1)
+
+    @property
+    def NW(self):
+        return (self.row + 1, self.col - 1)
+
+    @property
+    def SW(self):
+        return (self.row - 1, self.col - 1)
 
 
     def get_neighbours(self, grid):
@@ -248,25 +279,25 @@ class Point():
         neighbours = []
         #print("neighbours:")
         try:
-            neighbour_S = Point(self.S, grid.positions[self.S])
+            neighbour_S = Point(self.S, grid.points[self.S].value)
             #print("South: ", neighbour_S)
             neighbours.append(neighbour_S)
         except KeyError as e:
             pass
         try:
-            neighbour_E = Point(self.E, grid.positions[self.E])
+            neighbour_E = Point(self.E, grid.points[self.E].value)
             #print("East: ", neighbour_E)
             neighbours.append(neighbour_E)
         except KeyError as e:
             pass
         try:
-            neighbour_N = Point(self.N, grid.positions[self.N])
+            neighbour_N = Point(self.N, grid.points[self.N].value)
             #print("North: ", neighbour_N)
             neighbours.append(neighbour_N)
         except KeyError as e:
             pass
         try:
-            neighbour_W = Point(self.W, grid.positions[self.W])
+            neighbour_W = Point(self.W, grid.points[self.W].value)
             #print("West: ", neighbour_W)
             neighbours.append(neighbour_W)
         except KeyError as e:
@@ -275,3 +306,34 @@ class Point():
 
 
 
+    def get_8neighbours(self, grid):
+        """obtain a point's neighbours' coordinates and values based on grid info.
+        First gets the neighbour's position based on NESW properties, then retrieves the values from
+        grid.positions, which is a dictionary of positions with their corresponding values."""
+        neighbours = self.get_neighbours(grid)
+        #print("neighbours:")
+        try:
+            neighbour_NE = Point(self.NE, grid.points[self.NE].value)
+            #print("South: ", neighbour_NE)
+            neighbours.append(neighbour_NE)
+        except KeyError as e:
+            pass
+        try:
+            neighbour_SE = Point(self.SE, grid.points[self.SE].value)
+            #print("East: ", neighbour_SE)
+            neighbours.append(neighbour_SE)
+        except KeyError as e:
+            pass
+        try:
+            neighbour_SW = Point(self.SW, grid.points[self.SW].value)
+            #print("North: ", neighbour_SW)
+            neighbours.append(neighbour_SW)
+        except KeyError as e:
+            pass
+        try:
+            neighbour_NW = Point(self.NW, grid.points[self.NW].value)
+            #print("West: ", neighbour_NW)
+            neighbours.append(neighbour_NW)
+        except KeyError as e:
+            pass
+        return neighbours
