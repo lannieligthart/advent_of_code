@@ -16,12 +16,8 @@ import AoC_tools.aoc_tools as aoc
 
 data = aoc.read_input("input.txt", "\n", " ")
 
-dct = {"A": 1,
-     "B": 2,
-     "C": 3,
-     "X": 1,
-     "Y": 2,
-     "Z": 3}
+dct = {"A": 1, "B": 2, "C": 3, "X": 1, "Y": 2, "Z": 3}
+
 
 def game(p1, p2):
     p1 = dct[p1]
@@ -37,10 +33,10 @@ def game(p1, p2):
     elif p2 == p1:
         return 3 + p2
 
+
 total = 0
 for d in data:
-    p1 = d[0]
-    p2 = d[1]
+    p1, p2 = d
     result = game(p1, p2)
     total += result
 
