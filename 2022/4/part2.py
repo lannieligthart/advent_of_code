@@ -19,9 +19,6 @@ def check_overlaps(pair):
 
 
 data = [list(map(s, d)) for d in data]
-total = 0
-for d in data:
-    if check_overlaps(d):
-        total += 1
+total = len(list(filter(check_overlaps, data)))
 
 assert total == 841

@@ -19,12 +19,7 @@ def check_contains(pair):
     else:
         return False
 
-
 data = [list(map(s, d)) for d in data]
-
-total = 0
-for d in data:
-    if check_contains(d):
-        total += 1
+total = len(list(filter(check_contains, data)))
 
 assert total == 534
