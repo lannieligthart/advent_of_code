@@ -5,18 +5,21 @@ class Program(object):
     def __init__(self):
         self.cycle = 0
         self.x = 1
-        self.cycles = [0]
-        self.values = [1]
-        self.crt = ''
+        self.values = dict()
+        self.crt = ''  # index 0 of the crt string gets a space because this will not be used.
 
     @property
     def sprite(self):
+        """Instruction says: "the X register sets the horizontal position of the middle of that sprite."
+        This suggests that for the minimum value of x, the first pixel of the sprite is off-screen.
+        However, because the X is one-based, it can never be smaller than 1 and for a value of 1, the sprite starts at
+        index 0 of the CRT. Translated to the one-based indices of the value mapping, the sprite's positions are in
+        fact [x, x+1, x+2]"""
         return list(range(self.x, self.x + 3))
 
     def noop(self):
         self.cycle += 1
-        self.cycles.append(self.cycle)
-        self.values.append(self.x)
+        self.values[self.cycle] = self.x
         self.draw()
 
     def addx(self, n):
@@ -31,6 +34,7 @@ class Program(object):
             self.crt += "."
 
     def print_crt(self):
+        # here we do use zero-based indexing!
         start = 0
         end = 39
         # replace # and . by characters that make the result more readable
@@ -58,7 +62,7 @@ program.run(data)
 # part 1
 result = 0
 for i in [20, 60, 100, 140, 180, 220]:
-    result += program.cycles[i] * program.values[i]
+    result += i * program.values[i]
 
 #assert result == 13140
 assert result == 15260
