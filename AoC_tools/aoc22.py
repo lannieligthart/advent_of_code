@@ -37,10 +37,12 @@ def read_input(path, sep1="\n", sep2=None):
     """reads in data separated by 1 or optionally 2 levels of separators"""
     with open(path) as file:
         data = file.read()
-    if sep2 is None:
+    if sep1 is not None:
         data = data.split(sep1)
-    elif sep2 is not None:
-        data = [d.split(sep2) for d in data.split(sep1)]
+        data = [d.strip() for d in data]
+    if sep2 is not None:
+        data = [d.split(sep2) for d in data]
+        data = [list(map(lambda d: d.strip(), d)) for d in data]
     print("your data looks like this:")
     print(data)
     return data
@@ -87,8 +89,8 @@ class Grid(object):
 
     def __init__(self, points, values, na=" "):
         self.points = points
-        self.na = na
         self.values = values
+        self.na = na
 
     @staticmethod
     def read(data, rowsep='\n', colsep=" "):
