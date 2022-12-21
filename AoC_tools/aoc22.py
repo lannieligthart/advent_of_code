@@ -343,6 +343,10 @@ class Grid(object):
         self.points[point.pos] = point
         self.values[point.pos] = value
 
+    def add_points(self, points, value="#"):
+        for p in points:
+            self.add(p, value)
+
     def get_neighbour(self, pos, pos2=None):
         pos = self.parse_pos(pos, pos2)
         # before returning a point, check that it exists on the grid. If not, return None.
@@ -423,3 +427,69 @@ class Grid(object):
         for point in line.points:
             self.points[point.pos] = point
             self.values[point.pos] = char
+
+
+
+class Node(object):
+    """Node for use in a doubly (linear or circular) linked list"""
+    def __init__(self, id, number):
+        self.id = id
+        self.number = number
+        self.next = None
+        self.previous = None
+
+    def __str__(self):
+        result = f"""
+self: {self.number}
+previous: {self.previous.number}
+next: {self.next.number}"""
+        return result
+
+
+class CircularLinkedList:
+
+    def __init__(self, head):
+        self.head = head
+
+    def __str__(self):
+        start = self.head
+        result = []
+        while True:
+            result.append(self.head.number)
+            self.head = self.head.next
+            if self.head == start:
+                return str(result)
+
+    def remove(self):
+        node = self.head
+        self.head.previous.next  = self.head.next
+        self.head.next.previous = self.head.previous
+        # stel de volgende node in als head
+        self.head = self.head.next
+        node.next = None
+        node.previous = None
+        return node
+
+    def move_forward(self, n):
+        for x in range(n):
+            self.head = self.head.next
+
+    def move_backward(self, n):
+        for x in range(n):
+            self.head = self.head.previous
+
+    def insert_before(self, node):
+        previous = self.head.previous
+        self.head.previous = node
+        node.next = self.head
+        node.previous = previous
+        node.next.previous = node
+        previous.next = node
+
+    def move_node(self, steps):
+        node = self.remove()
+        if steps > 0:
+            self.move_forward(steps)
+        elif steps < 0:
+            self.move_backward(abs(steps))
+        self.insert_before(node)
