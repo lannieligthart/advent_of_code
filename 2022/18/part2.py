@@ -42,11 +42,11 @@ def get_outside_space(droplet):
             c = Cube(*s)
             nb = c.get_neigbours()
             # bewaar alleen de neighbours die binnen het gedefinieerde gebied vallen en niet bij de droplet horen
-            nb = [n for n in nb if n[0] in x_range and n[1] in y_range and n[2] in z_range and n not in droplet]
             # voeg deze aan de outside space toe
             for n in nb:
-                new_cubes.add(n)
-                outside_space.add(n)
+                if n[0] in x_range and n[1] in y_range and n[2] in z_range and n not in droplet:
+                    new_cubes.add(n)
+                    outside_space.add(n)
         selected = new_cubes
         new_len = len(outside_space)
         if old_len == new_len:
