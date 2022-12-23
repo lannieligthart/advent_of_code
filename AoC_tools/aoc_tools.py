@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import time
 
+# import AoC_tools.aoc_tools as aoc
+
 aocdir = "C:/Users/lanni/Code/advent_of_code"
 
 
@@ -31,7 +33,7 @@ def s2n(input):
     else:
         raise TypeError("Input should be a list of strings")
 
-def read_input(path, sep1, sep2=None):
+def read_input(path, sep1="\n", sep2=None):
     """reads in data separated by 1 or optionally 2 levels of separators"""
     with open(path) as file:
         data = file.read()
@@ -114,7 +116,6 @@ def split_list(data, sep=" "):
         data[i] = data[i].split(sep)
     return data
 
-
 def start():
     return time.time()
 
@@ -131,6 +132,30 @@ class Point(object):
 
     def __str__(self):
         return f"Position: ({self.x}, {self.y})"
+
+    @property
+    def nb_4(self):
+        """returns north, east, south and west neighbours for a point"""
+        x = self.x
+        y = self.y
+        nb = [(x-1, y), (x+1, y), (x, y+1), (x, y-1)]
+        return nb
+
+    def nb_4dir(self, x_max, y_max):
+        """returns a list of all neighbouring points in 4 directions until the end of the grid"""
+        north = []
+        south = []
+        east = []
+        west = []
+        for x in reversed(range(0, self.x)):
+            north.append([x, self.y])
+        for x in range(self.x+1, x_max + 1):
+            south.append([x, self.y])
+        for y in reversed(range(0, self.y)):
+            west.append([self.x, y])
+        for y in range(self.y+1, y_max + 1):
+            east.append([self.x, y])
+        return (north, east, south, west)
 
 class Grid():
     # grid has x and y axis. In principle, x axis runs from low to high, y axis also, except if flip_y is
