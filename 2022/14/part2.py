@@ -27,8 +27,8 @@ def make_cave(data):
         line = [x.split(",") for x in line]
         line = [list(map(int, x)) for x in line]
         for i in range(len(line) - 1):
-            v1 = Vector(line[i])
-            v2 = Vector(line[i+1])
+            v1 = Vector(*line[i])
+            v2 = Vector(*line[i+1])
             points = add_line(v1, v2, points)
     grid = Grid.from_list(points)
     for p in points:

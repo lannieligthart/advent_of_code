@@ -33,19 +33,25 @@ def s2n(input):
     else:
         raise TypeError("Input should be a list of strings")
 
-def read_input(path, sep1="\n", sep2=None):
+def read_input(path, sep1="\n", sep2=None, strip=True):
     """reads in data separated by 1 or optionally 2 levels of separators"""
     with open(path) as file:
         data = file.read()
     if sep1 is not None:
         data = data.split(sep1)
-        data = [d.strip() for d in data]
+        if strip:
+            data = [d.strip() for d in data]
     if sep2 is not None:
         data = [d.split(sep2) for d in data]
-        data = [list(map(lambda d: d.strip(), d)) for d in data]
+        if strip:
+            data = [list(map(lambda d: d.strip(), d)) for d in data]
     print("your data looks like this:")
     print(data)
     return data
+
+def dprint(dict):
+    for key, value in dict.items():
+        print(key, value)
 
 def sorted_print(dict, by='key'):
     """prints a dictionary sorted by key"""
@@ -73,10 +79,9 @@ def pad(str, n):
 
 class Point(object):
 
-    def __init__(self, pos, pos2=None):
-        pos = Grid.parse_pos(pos, pos2)
-        self.x = pos[0]
-        self.y = pos[1]
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
     def __str__(self):
         return f"""Position: ({self.x}, {self.y})"""
@@ -88,6 +93,23 @@ class Point(object):
     def mhd(self, other):
         """manhattan distance"""
         return abs(self.x - other.x) + abs(self.y - other.y)
+
+    @property
+    def N(self):
+        return Point(self.x, self.y - 1)
+
+    @property
+    def S(self):
+        return Point(self.x, self.y + 1)
+
+    @property
+    def W(self):
+        return Point(self.x - 1, self.y)
+
+    @property
+    def E(self):
+        return Point(self.x + 1, self.y)
+
 
 class Vector(Point):
 
@@ -183,37 +205,41 @@ class Grid(object):
         return grid
 
     @staticmethod
-    def read(data, rowsep='\n', colsep=" "):
+    def read(data, rowsep='\n', colsep=" ", nosep=False):
         """reads a list of lists, a list of strings, or a single string and returns a grid"""
+        # TODO: moet ook een lijst van strings in kunnen lezen zonder colsep ertussen
         # print("\ninput:")
         # print(data, "\n")
         if isinstance(data, str):
             # if data is a single string, it should be converted to a list of lists using the separators.
             data_new = []
             rows = data.split(rowsep)
-            for row in rows:
-                row = row.split(colsep)
-                # If row elements are not separated, split them
-                if len(row) == 1:
-                    row = [char for char in row[0]]
-                data_new.append(row)
+            if not nosep:
+                for row in rows:
+                    row = row.split(colsep)
+                    # If row elements are not separated, split them
+                    if len(row) == 1:
+                        row = [char for char in row[0]]
+                    data_new.append(row)
+            elif nosep:
+                for row in rows:
+                    row = list(row)
+                    data_new.append(row)
             data = data_new
             # data = [row.split(colsep) for row in rows]
         elif isinstance(data, list):
             # if the elements of the lists are not lists themselves, split them up into lists.
             if isinstance(data[0], str):
                 data = [row.split(colsep) for row in data]
-        points = {}
-        values = {}
         # rows
         nrows = len(data)
         ncols = len(data[0])
+        points = dict()
         for r in range(nrows):
             # columns
             for c in range(ncols):
-                points[(c, r)] = Point(c, r)
-                values[(c, r)] = data[r][c]
-        return Grid(points, values)
+                points[(c, r)] = data[r][c]
+        return Grid.from_dict(points)
 
     def transpose(self):
         points = self.points
@@ -240,6 +266,13 @@ class Grid(object):
         values_fh = {(key[0], (self.y_max - key[1])): value for key, value in values.items()}
         self.points = points_fh
         self.values = values_fh
+
+    def includes(self, point):
+        """check if grid includes a point with given coordinates"""
+        if self.y_max >= point.y >= self.y_min and self.x_max >= point.x >= self.x_min:
+            return True
+        else:
+            return False
 
     @property
     def x_min(self):
@@ -326,29 +359,33 @@ class Grid(object):
             pass
         elif isinstance(pos,list) and len(pos) == 2:
             pos = list(pos)
-
         else:
             raise ValueError("Invalid position given")
         return pos
 
-    def get_value(self, pos, pos2=None):
-        pos = self.parse_pos(pos, pos2)
+    def get_value(self, pos):
         return self.values[pos]
 
-    def set_value(self, value, pos, pos2=None):
-        pos = self.parse_pos(pos, pos2)
+    def set_value(self, value, pos):
         self.values[pos] = value
 
     def add(self, point, value="#"):
+        if isinstance(point, tuple):
+            point = Point(point)
         self.points[point.pos] = point
         self.values[point.pos] = value
+
+    def remove(self, point):
+        if isinstance(point, tuple):
+            point = Point(point)
+        self.points.pop(point.pos)
+        self.values.pop(point.pos)
 
     def add_points(self, points, value="#"):
         for p in points:
             self.add(p, value)
 
-    def get_neighbour(self, pos, pos2=None):
-        pos = self.parse_pos(pos, pos2)
+    def get_neighbour(self, pos):
         # before returning a point, check that it exists on the grid. If not, return None.
         if pos in self.values.keys():
             return Point(*pos)
@@ -387,7 +424,7 @@ class Grid(object):
         nb_pos = (point.x - 1, point.y - 1)
         return self.get_neighbour(nb_pos)
 
-    def get_neighbours(self, point, n):
+    def get_neighbours(self, point, n, direction=None):
         """returns north, east, south and west neighbours for a point"""
         N = self.get_north(point)
         NE = self.get_northeast(point)
@@ -400,8 +437,20 @@ class Grid(object):
         if n == 4:
             all_nb = [N, S, E, W]
             return [nb for nb in all_nb if nb is not None]
-        elif n == 8:
+        elif n == 8 and direction is None:
             all_nb = [N, NE, E, SE, S, SW, W, NW]
+            return [nb for nb in all_nb if nb is not None]
+        elif n == 8 and direction == "N":
+            all_nb = [N, NE, NW]
+            return [nb for nb in all_nb if nb is not None]
+        elif n == 8 and direction == "S":
+            all_nb = [S, SE, SW]
+            return [nb for nb in all_nb if nb is not None]
+        elif n == 8 and direction == "E":
+            all_nb = [E, SE, NE]
+            return [nb for nb in all_nb if nb is not None]
+        elif n == 8 and direction == "W":
+            all_nb = [W, SW, NW]
             return [nb for nb in all_nb if nb is not None]
         else:
             raise ValueError("Invalid number of neighbours specified! Specify 4 or 8.")
