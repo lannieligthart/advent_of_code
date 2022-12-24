@@ -42,15 +42,15 @@ def get_options(point, blizzard_state, x_max, y_max):
 
 def get_shortest_path(blizzard_data):
     # start position
-    e_pos = (0, -1)
+    start = (0, 0)
+    goal_reached = False
+    start_reached = False
     # position just before end
     goal = (x_max, y_max)
     # first option available is start position
-    positions = set([e_pos])
+    positions = set([(0, -1)])
     i = 1
     while True:
-        if i % 50 == 0:
-            print(i)
         # get current state of the blizzards
         bd = get_blizzard_state(i, blizzard_data, x_max, y_max)
         # we collect the new options in a set so we don't duplicate anything
@@ -60,9 +60,20 @@ def get_shortest_path(blizzard_data):
         #current_grid.display()
         # for the current options:
         for pos in positions:
-            if pos == goal:
-                print(f"reached goal in {i} minutes")
+            if pos == goal and goal_reached == False:
+                print(f"reached goal for the first time in {i} minutes")
+                new_positions = set([goal])
+                goal_reached = True
+                break
+            elif pos == start and goal_reached and not start_reached:
+                print(f"arrived back at start in {i} minutes")
+                new_positions = set([start])
+                start_reached = True
+                break
+            elif pos == goal and start_reached:
+                print(f"reached goal for the second time in {i} minutes")
                 return i
+
             # for this option, investigate which options there are
             options = get_options(Point(*pos), bd, x_max, y_max)
             # als er wel opties zijn, voeg deze allemaal toe als nieuwe posities
@@ -71,7 +82,7 @@ def get_shortest_path(blizzard_data):
                 #current_grid.add_points(list(new_positions), "E")
             if len(options) == 0 and pos == (0, -1):
                 new_positions = [pos]
-        print(f"in minute {i}, optional positions are {new_positions}")
+        #print(f"in minute {i}, optional positions are {new_positions}")
         # if i % 50 == 0:
         #current_grid.display()
         positions = new_positions
@@ -80,9 +91,9 @@ def get_shortest_path(blizzard_data):
 
 data = read_input("input.txt")
 data = data[1:-1]
-# data = [list(d.replace("#", "")) for d in data]
-# grid = Grid.read(data)
-# grid.display()
+data = [list(d.replace("#", "")) for d in data]
+grid = Grid.read(data)
+grid.display()
 
 y_min, y_max = grid.y_min, grid.y_max
 x_min, x_max = grid.x_min, grid.x_max
@@ -94,4 +105,5 @@ for key, value in grid.values.items():
         blizzard_data.append(Blizzard(value, *key))
 
 result = get_shortest_path(blizzard_data)
-assert result == 255
+
+assert result == 809
