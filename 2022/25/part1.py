@@ -19,18 +19,14 @@ def decode(snafu_number):
 
 def encode(decimal_number):
     wb = {-2: '=', -1: '-', 0: '0', 1: '1', 2: '2'}
-    # bepaal welke macht van 5 groter is dan number
-    i = 0
-    while True:
-        if 5 ** i > decimal_number:
-            break
-        i += 1
     snafu_tmp = []
-    for j in range(i):
+    j = 0
+    while decimal_number > 0:
         for delta in [-2, -1, 0, 1, 2]:
             if (decimal_number - delta*5**j) % 5**(j+1) == 0:
                 snafu_tmp.append(delta)
                 decimal_number -= 5**j * delta
+                j += 1
                 break
     snafu_tmp.reverse()
     snafu = ''
