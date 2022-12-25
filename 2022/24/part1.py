@@ -95,3 +95,4 @@ for key, value in grid.values.items():
 
 result = get_shortest_path(blizzard_data)
 assert result == 255
+
