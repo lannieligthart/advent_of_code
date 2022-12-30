@@ -1,6 +1,7 @@
 from AoC_tools.aoc22 import *
 from itertools import permutations, combinations
 from queue import PriorityQueue
+from copy import deepcopy
 
 def find_shortest_path(graph, start, goal):
     visited = []
@@ -21,14 +22,11 @@ def find_shortest_path(graph, start, goal):
 
 class State(object):
 
-    def __init__(self, node1, node2, path1, path2, flow, score, minutes_left1, minutes_left2, nodes_left):
-        self.node1 = node1
-        self.node2 = node2
+    def __init__(self, node, path, flow, score, minutes_left, nodes_left):
+        self.node = node
         self.nodes_left = nodes_left
-        self.path1 = path1
-        self.path2 = path2
-        self.minutes_left1 = minutes_left1
-        self.minutes_left2 = minutes_left2
+        self.path = path
+        self.minutes_left = minutes_left
         self.flow = flow
         self.score = score
 
@@ -36,43 +34,51 @@ class State(object):
     # calculate the theoretical potential of the unvisited nodes if they were all opened at once, as an indicator of
     # how good each option is. Assume we do this for the player with the most minutes left.
     def potential(self):
-        minutes_left = max(self.minutes_left1, self.minutes_left2)
+        minutes_left = self.minutes_left[0]
         potential = 0
         for n in self.nodes_left:
             potential += flows[n] * minutes_left
         return potential
 
     def __gt__(self, other):
-        return self.score > other.score
+        return self.potential > other.potential
 
     def __lt__(self, other):
-        return self.score < other.score
+        return self.potential < other.potential
 
     def __str__(self):
-        string = f"Path 1: {', '.join(self.path1)}; Path 2: {', '.join(self.path2)}; Score: {self.score}; Score + potential: {self.score + self.potential}; "
+        string = f"Path 1: {', '.join(self.path[0])}; Path 2: {', '.join(self.path[1])}; Score: {self.score}; Score + potential: {self.score + self.potential}"
         return string
 
 
-def get_new_state(current_state, visited_node1, visited_node2):
-    path1 = current_state.path1.copy()
-    path2 = current_state.path2.copy()
-    minutes_left1 = current_state.minutes_left1 - (shortest_path[(current_state.node1, visited_node1)])
-    minutes_left2 = current_state.minutes_left2 - (shortest_path[(current_state.node2, visited_node2)])
+def get_new_state(current_state, visited_node):
+    # copy old state
+    path = deepcopy(current_state.path)
+    minutes_left = current_state.minutes_left.copy()
+    flow = current_state.flow.copy()
+    node = current_state.node.copy()
     nodes_left = current_state.nodes_left.copy()
-    if minutes_left1 > 0:
-        path1.append(visited_node1)
-        nodes_left.remove(visited_node1)
-    if minutes_left2 > 0:
-        path2.append(visited_node2)
-        nodes_left.remove(visited_node2)
-    flow = current_state.flow + flows[visited_node1] + flows[visited_node2]
+    score = current_state.score
 
+    # update path with the most minutes left
+    minutes_left[0] = minutes_left[0] - (shortest_path[(node[0], visited_node)])
+    flow[0] = flow[0] + flows[visited_node]
+    path[0].append(visited_node)
+    node[0] = visited_node
+    nodes_left.remove(visited_node)
+    score = score + flows[visited_node] * minutes_left[0]
+    # sort the player such that the one with the most minutes left comes first
+    if minutes_left[1] > minutes_left[0]:
+        # shuffle things around
+        minutes_left = [minutes_left[1], minutes_left[0]]
+        flow = [flow[1], flow[0]]
+        path = [path[1], path[0]]
+        node = [node[1], node[0]]
+    return State(node, path, flow, score, minutes_left, nodes_left)
 
-    score = current_state.score + flows[visited_node1] * minutes_left1 + flows[visited_node2] * minutes_left2
-    return State(visited_node1, visited_node2, path1, path2, flow, score, minutes_left1, minutes_left2, nodes_left)
+start = start()
 
-
-data = read_input("testinput.txt")
+data = read_input("input.txt")
 data = [d.replace("Valve ", "") for d in data]
 data = [d.replace(" has flow rate=", ", ") for d in data]
 data = [d.replace("; tunnels lead to valves ", ", ") for d in data]
@@ -102,7 +108,18 @@ for d in data:
 sorted_print(flows, by='value')
 
 relevant_nodes = [key for key, value in flows.items() if value > 0]
-begin_state = State(node1='AA', node2='AA', path1=['AA'], path2=['AA'], flow=0, score=0, minutes_left1=26, minutes_left2=26, nodes_left=relevant_nodes)
+begin_state = State(node=['AA', 'AA'], path=[['AA'], ['AA']], flow=[0, 0], score=0, minutes_left=[26, 26], nodes_left=relevant_nodes)
+
+# test_state = get_new_state(begin_state, 'BB')
+#
+# assert test_state.node == ['AA', 'BB']
+# assert test_state.path == [['AA'], ['AA', 'BB']]
+# assert test_state.minutes_left == [26, 24]
+# assert test_state.flow == [0, 13]
+# assert test_state.score == 13*24
+# assert test_state.nodes_left == ['CC', 'DD', 'EE', 'HH', 'JJ']
+# assert test_state.potential == 2*26 + 20*26 + 3*26 + 22*26 + 21*26
+
 
 q = PriorityQueue()
 q.put((begin_state.score, begin_state))
@@ -111,31 +128,19 @@ max_score = begin_state.score
 while not q.empty():
     # haal een state op
     current_state = q.get()[1]
-    # maak alle mogelijke combinaties van 2 toe te voegen nodes en voeg die in beide volgordes aan de state toe.
-    node_combos = list(combinations(current_state.nodes_left, 2))
-    # loop de nodes langs die in deze state nog over zijn en bepaal voor elke combi van 2 nodes een nieuwe state.
-    for nc in node_combos:
-        combo1 = nc
-        combo2 = (nc[1], nc[0])
-        for c in [combo1, combo2]:
-            #print(f"adding {visited_node} to {current_state.node}")
-            new_state = get_new_state(current_state, c[0], c[1])
-            if new_state.score + new_state.potential > max_score:
-                #print(f"Max score: {max_score}; keeping {new_state}")
-                q.put((-1 * (new_state.score + new_state.potential), new_state))
-            #else:
-             #   print(f"Max score: {max_score}; discarding {new_state}")
-            if new_state.score > max_score:
-                max_score = new_state.score
-                print(f"Max score: {max_score}; keeping {new_state}")
-                print(f"New max score: {max_score}")
-                print(len(q.queue))
-    #print(len(q.queue))
+    for visited_node in current_state.nodes_left:
+        new_state = get_new_state(current_state, visited_node)
+        if new_state.score + new_state.potential > max_score:
+            q.put((-1 * new_state.score, new_state))
+        if new_state.score > max_score:
+            max_score = new_state.score
+            print(f"Max score: {max_score}; keeping {new_state}")
+            print(f"New max score: {max_score}")
+            print(len(q.queue))
+        #print(len(q.queue))
 
 print(f"max score: {max_score}")
+assert max_score == 2100
 
-#path = ['AA', 'DD', 'BB', 'JJ', 'HH', 'EE', 'CC']
+end = end(start)
 
-
-
-#2063 too low
