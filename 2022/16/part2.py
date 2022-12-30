@@ -1,7 +1,6 @@
 from AoC_tools.aoc22 import *
-from itertools import permutations, combinations
+from itertools import combinations
 from queue import PriorityQueue
-from copy import deepcopy
 
 def find_shortest_path(graph, start, goal):
     visited = []
@@ -22,13 +21,15 @@ def find_shortest_path(graph, start, goal):
 
 class State(object):
 
-    def __init__(self, node, path, flow, score, minutes_left, nodes_left):
+    def __init__(self, node, flow, score, minutes_left, nodes_left):
         self.node = node
         self.nodes_left = nodes_left
-        self.path = path
         self.minutes_left = minutes_left
         self.flow = flow
         self.score = score
+
+    def potent(self, maxprod):
+        return max(0, self.minutes_left[0] - 2) * (maxprod - self.flow)
 
     @property
     # calculate the theoretical potential of the unvisited nodes if they were all opened at once, as an indicator of
@@ -41,29 +42,25 @@ class State(object):
         return potential
 
     def __gt__(self, other):
-        return self.potential > other.potential
+        return self.score > other.score
 
     def __lt__(self, other):
-        return self.potential < other.potential
-
-    def __str__(self):
-        string = f"Path 1: {', '.join(self.path[0])}; Path 2: {', '.join(self.path[1])}; Score: {self.score}; Score + potential: {self.score + self.potential}"
-        return string
+        return self.score < other.score
 
 
 def get_new_state(current_state, visited_node):
     # copy old state
-    path = deepcopy(current_state.path)
     minutes_left = current_state.minutes_left.copy()
-    flow = current_state.flow.copy()
+    flow = current_state.flow
     node = current_state.node.copy()
     nodes_left = current_state.nodes_left.copy()
     score = current_state.score
-
+    shortest = (shortest_path[(node[0], visited_node)])
+    if shortest > minutes_left[0]:
+        return
     # update path with the most minutes left
-    minutes_left[0] = minutes_left[0] - (shortest_path[(node[0], visited_node)])
-    flow[0] = flow[0] + flows[visited_node]
-    path[0].append(visited_node)
+    minutes_left[0] = minutes_left[0] - shortest
+    flow = flow + flows[visited_node]
     node[0] = visited_node
     nodes_left.remove(visited_node)
     score = score + flows[visited_node] * minutes_left[0]
@@ -71,10 +68,8 @@ def get_new_state(current_state, visited_node):
     if minutes_left[1] > minutes_left[0]:
         # shuffle things around
         minutes_left = [minutes_left[1], minutes_left[0]]
-        flow = [flow[1], flow[0]]
-        path = [path[1], path[0]]
         node = [node[1], node[0]]
-    return State(node, path, flow, score, minutes_left, nodes_left)
+    return State(node, flow, score, minutes_left, nodes_left)
 
 start = start()
 
@@ -108,36 +103,27 @@ for d in data:
 sorted_print(flows, by='value')
 
 relevant_nodes = [key for key, value in flows.items() if value > 0]
-begin_state = State(node=['AA', 'AA'], path=[['AA'], ['AA']], flow=[0, 0], score=0, minutes_left=[26, 26], nodes_left=relevant_nodes)
-
-# test_state = get_new_state(begin_state, 'BB')
-#
-# assert test_state.node == ['AA', 'BB']
-# assert test_state.path == [['AA'], ['AA', 'BB']]
-# assert test_state.minutes_left == [26, 24]
-# assert test_state.flow == [0, 13]
-# assert test_state.score == 13*24
-# assert test_state.nodes_left == ['CC', 'DD', 'EE', 'HH', 'JJ']
-# assert test_state.potential == 2*26 + 20*26 + 3*26 + 22*26 + 21*26
-
+begin_state = State(node=['AA', 'AA'], flow=0, score=0, minutes_left=[26, 26], nodes_left=relevant_nodes)
 
 q = PriorityQueue()
 q.put((begin_state.score, begin_state))
 max_score = begin_state.score
+maxprod = sum(flows.values())
+
 
 while not q.empty():
-    # haal een state op
     current_state = q.get()[1]
     for visited_node in current_state.nodes_left:
         new_state = get_new_state(current_state, visited_node)
-        if new_state.score + new_state.potential > max_score:
+        if new_state is None:
+            continue
+        if new_state.score + new_state.potent(maxprod) > max_score:
             q.put((-1 * new_state.score, new_state))
         if new_state.score > max_score:
             max_score = new_state.score
             print(f"Max score: {max_score}; keeping {new_state}")
             print(f"New max score: {max_score}")
             print(len(q.queue))
-        #print(len(q.queue))
 
 print(f"max score: {max_score}")
 assert max_score == 2100
