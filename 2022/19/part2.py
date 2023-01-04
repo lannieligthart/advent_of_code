@@ -107,15 +107,16 @@ def update_state(state, blueprint, option, options=None):
         robots, stock, costs = buy_geobot(robots, stock, costs)
     # if an option could have been chosen but wasn't, block it until something is bought that lowers the cost
     # such that the option is no longer feasible.
-    # for i in range(4):
-    #     if options[i] and option == 4:
-    #         block[i] = True
-    # # unblock options that are currently blocked but can't be afforded anymore
-    #     if block[i] and not options[i]:
-    #         block[i] = False
+    for i in range(4):
+        if options[i] and option == 4:
+            block[i] = True
+    # unblock options that are currently blocked but can't be afforded anymore
+        if block[i] and not options[i]:
+            block[i] = False
     #if the resources exceed the resources we could possibly need, they can be capped.
     for i in range(3):
-        stock[i] = min(stock[i], (max_needed(blueprint)[i] - robots[i]) * minutes_left)
+        maxval = max_needed(blueprint)[i] * minutes_left
+        stock[i] = min(stock[i], maxval)
     return State(stock, robots, minutes_left, block)
 
 def max_prod(robots, stock, minutes_left):
@@ -139,6 +140,7 @@ def run_blueprint(blueprint):
     states = deque([state])
     max_stock = [0, 0, 0, 0]
     guaranteed_max = 0
+    maxval = max_needed(blueprint)
     print("blueprint:")
     print(blueprint)
     for x in range(32):
@@ -164,8 +166,6 @@ def run_blueprint(blueprint):
                         # add to the state dictionary
                         state_dict[newstate.fingerprint] = newstate
                         newstates.append(newstate)
-        if logged_states[x] not in state_dict:
-            print("Missing a path!!")
         states = newstates.copy()
         print("Number of states:", len(states))
         print("Max stock:", max_stock)
@@ -174,41 +174,23 @@ def run_blueprint(blueprint):
     return max_stock[3]
 
 
-data = read_input("testinput.txt", "\n")
+data = read_input("input.txt", "\n")
 data = [d.split() for d in data]
 data = list(map(keep_ints, data))
 data = list(map(organize, data))
-
-# test blueprint 1 path as described in example
-# 0 buy orebot, 1 buy claybot, 2 buy obsbot, 3 buy geobot, 4 do nothing.
-# part 2 test run should produce 56
-logged_states = []
-options = [4, 4, 4, 4, 0, 4, 1, 1, 1, 1, 1, 1, 1, 2, 4, 2, 2, 4, 2, 3, 2, 3, 3, 3, 4, 3, 3, 4, 3, 3, 3, 4]
-blueprint = data[0]
-state = State.new()
-for i, o in enumerate(options):
-    print(f"minute {i + 1}")
-    state = update_state(state, blueprint, o, [True, True, True, True, True])
-    logged_states.append(state.fingerprint)
-    print(state)
-
-assert state.stock[3] == 56
-assert state.robots == [2, 7, 5, 9]
 
 state = State.new()
 states = deque([state])
 start = start()
 max_n_geodes = []
 
-for i, d in enumerate(data[0:1]):
+for i, d in enumerate(data[0:3]):
     print(f"Blueprint #{i +1} of {len(data)}")
     max_n_geodes.append((i+1, run_blueprint(d)))
 
-total = 0
-for i in range(len(max_n_geodes)):
-    total += max_n_geodes[i][0] * max_n_geodes[i][1]
-
+result = max_n_geodes[i][0] * max_n_geodes[i][1] * max_n_geodes[i][2]
 print(max_n_geodes)
-print(total)
+print(result)
+assert result == 5824
 
 end = end(start)
