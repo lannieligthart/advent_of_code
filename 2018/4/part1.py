@@ -1,42 +1,24 @@
-from AoC_tools import aoc22 as aoc
+from collections import defaultdict
 
 with open("input.txt") as file:
     data = file.read().split("\n")
 
 data.sort()
-#aoc.lprint(data)
 
-guards = dict()
+guards = defaultdict()
 asleep_times = []
 wake_times = []
 guard = None
 for d in data:
     if "Guard" in d:
-        if guard is not None:
-            intervals = []
-            for i in range(len(asleep_times)):
-                intervals.append((asleep_times[i], wake_times[i]))
-            if not int(guard) in guards:
-                guards[int(guard)] = intervals
-            else:
-                guards[int(guard)].extend(intervals)
-        guard = d.split("#")[1].split(" ")[0]
-        asleep_times = []
-        wake_times = []
+        guard = int(d.split("#")[1].split(" ")[0])
+        if guard not in guards:
+            guards[guard] = []
     elif "asleep" in d:
         t1 = d.split(":")[1].split("]")[0]
-        asleep_times.append(int(t1))
     elif "wakes" in d:
         t2 = d.split(":")[1].split("]")[0]
-        wake_times.append(int(t2))
-# TODO: de laatste gaat nu niet mee, dit moet netter
-intervals = []
-for i in range(len(asleep_times)):
-    intervals.append((asleep_times[i], wake_times[i]))
-if not int(guard) in guards:
-    guards[int(guard)] = intervals
-else:
-    guards[int(guard)].extend(intervals)
+        guards[guard].append((int(t1), int(t2)))
 
 for key, value in guards.items():
     print(key, value)
@@ -54,27 +36,32 @@ def times_asleep_during_minute(intervals, minute):
             count += 1
     return count
 
-asleep_times
+# find the guard that spends the most minutes asleep
 
+# keep track of the max encountered so far
 max = [None, 0]
 
+# loop through all the guards
 for key, value in guards.items():
     time_asleep = get_asleep_time(value)
+    # if higher than max recorded, replace max
     if time_asleep > max[1]:
         max = [key, time_asleep]
 
+# write results to readable variable name
 guard_most_asleep = max[0]
 time_asleep = max[1]
 
 print(f"Guard most asleep: {guard_most_asleep}, Time asleep: {time_asleep}")
 
+# loop through all minutes (0-59) to see how many times the guard was asleep during each minute, and store in a dict
 minutes = dict()
 for minute in range(0, 60):
     minutes[minute] = 0
     minutes[minute] = times_asleep_during_minute(guards[guard_most_asleep], minute)
 
+# get the minute the guard was most often asleep
 max = [None, 0]
-
 for key, value in minutes.items():
     if value > max[1]:
         max = [key, value]
