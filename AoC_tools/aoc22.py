@@ -199,7 +199,7 @@ class Grid(object):
                 points[item.pos] = item
                 values[item.pos] = char
             else:
-                points[item] = Point(item)
+                points[item] = Point(*item)
                 values[item] = char
         grid = cls(points, values)
         return grid
@@ -371,7 +371,7 @@ class Grid(object):
 
     def add(self, point, value="#"):
         if isinstance(point, tuple):
-            point = Point(point)
+            point = Point(*point)
         self.points[point.pos] = point
         self.values[point.pos] = value
 
