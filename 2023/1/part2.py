@@ -13,7 +13,7 @@ def extract_numbers(s):
             if s[i].isdigit():
                 result.append(int(s[i]))
             # words
-            if s[i:].startswith(n):
+            elif s[i:].startswith(n):
                 idx = numbers.index(n)
                 result.append(idx + 1)
     return (result[0], result[-1])
