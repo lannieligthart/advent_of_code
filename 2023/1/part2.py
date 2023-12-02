@@ -8,14 +8,15 @@ def extract_numbers(s):
     # "word-digit". Append all to a list and return the first and last.
     result = []
     for i in range(len(s)):
-        for n in numbers:
-            # digits
-            if s[i].isdigit():
-                result.append(int(s[i]))
-            # words
-            elif s[i:].startswith(n):
-                idx = numbers.index(n)
-                result.append(idx + 1)
+        # digits
+        if s[i].isdigit():
+            result.append(int(s[i]))
+        # words
+        else:
+            for n in numbers:
+                if s[i:].startswith(n):
+                    idx = numbers.index(n)
+                    result.append(idx + 1)
     return (result[0], result[-1])
 
 result = 0
