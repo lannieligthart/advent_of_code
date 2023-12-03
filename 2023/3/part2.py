@@ -2,22 +2,17 @@ with open("input.txt") as file:
     data = file.read().split("\n")
 
 data = [d + "." for d in data] # append a . to each row so I don't miss any numbers at the end
-symbol_positions = dict()
 symbols = set()
-adjacent = []
+# add all the symbol coordinates to a dictionary with emtpy sets.
+symbol_positions = {
+    (r, c): set()
+    for r, row in enumerate(data)
+    for c, char in enumerate(row)
+    if not char.isdigit() and char != "."
+    }
 
-for r, row in enumerate(data):
-    for c, char in enumerate(row):
-        if not char.isdigit() and char != ".":
-            symbol_positions[(r, c)] = set()
-
-"""loop through strings. When you reach the first digit, record the position. Check if following char is also a digit, 
-if so, also record the position. Once a non-digit is reached, you have the full digit. For all the positions, check if 
-they have an x or y that is at most one away from a symbol position. 
-"""
-
-def check_position(r, c, symbol_positions):
-    for pos in symbol_positions.keys():
+def check_adjacency(r, c, symbol_positions):
+    for pos in symbol_positions:
         rp, cp = pos
         difr = abs(r - rp)
         difc = abs(c - cp)
@@ -29,27 +24,27 @@ def check_position(r, c, symbol_positions):
 for r, row in enumerate(data):
     digit_positions = []
     number = ''
-    for c, col in enumerate(row):
-        if col.isdigit():
-            number += col
+    for c, char in enumerate(row):
+        # if you encounter a digit, add it to the current number
+        if char.isdigit():
+            number += char
             digit_positions.append((r, c))
+        # if you don't encounter a digit, and there is a current number, process the number
         elif number != '':
-            neighbouring_symbol_positions = []
+            # record the positions of adjacent symbols
+            adjacent_symbols = []
             for p in digit_positions:
-                r, c = p
-                nsp = check_position(r, c, symbol_positions)
+                nsp = check_adjacency(*p, symbol_positions.keys())
+                # if an adjacent symbol was detected, add it to the list
                 if nsp is not None:
-                    neighbouring_symbol_positions.append(nsp)
-            if len(neighbouring_symbol_positions) > 0:
-                adjacent.append(int(number))
-            for n in neighbouring_symbol_positions:
+                    adjacent_symbols.append(nsp)
+            for n in adjacent_symbols:
                 symbol_positions[n].add((number))
             # reset
             digit_positions = []
             number = ''
 
 gr = []
-
 for v in symbol_positions.values():
     if len(v) == 2:
         v = list(v)
