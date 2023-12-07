@@ -1,59 +1,66 @@
-with open("testinput.txt") as file:
+with open("input.txt") as file:
     data = file.read().split("\n\n")
 
 seeds = list(map(int,data[0].split()[1:]))
-data = data[1:]
-maps = dict()
+seed_ranges = []
+for i in range(0, len(seeds), 2):
+    seed_ranges.append((seeds[i], seeds[i] + seeds[i+1]))
 
-print(seeds)
-print(data)
+conversions = dict()
 
-for d in data:
+for d in data[1:]:
     d = d.split(" map:\n")
-    src = d[0].split("-")[0]
-    dest = d[0].split("-")[2]
-    print(dest, src)
-    maps[src, dest] = []
+    conversion_ranges = []
     lines = d[1].split("\n")
     for line in lines:
-        d, s, r = list(map(int, line.split()))
-        print(s, d, r)
-        rng = range(s, s + r)
-        delta = d - s
-        maps[src, dest].append((rng, delta))
+        dest, start, r = list(map(int, line.split()))
+        conversion_ranges.append((start, start + r, dest - start))
+    conversions[d[0]] = conversion_ranges
 
-print(f"from source to destination:")
-for key, value in maps.items():
-    print(key, value)
+def find_cut_points(conversion_ranges):
+    # voor de input range, kijk welke cut points er zijn.
+    # als een cut point binnen de range ligt, knip de range in stukken.
+    cut_points = set()
+    for cr in conversion_ranges:
+        cut_points.add(cr[0])
+        cut_points.add(cr[1])
+    # sorteer ze
+    cut_points = list(cut_points)
+    cut_points.sort()
+    return cut_points
 
-def translate(number, src, dest):
-    # if the seed is in any of the ranges in the dictionary, apply a translation.
-    # if not, leave unaltered.
-    ranges = maps[(src, dest)]
-    for r in ranges:
-        if number in r[0]:
-            number += r[1]
-            return number
-    return number
+def cut_range(input_range, cut_points):
+    start, stop = input_range
+    # bepaal welke cut points in deze range liggen
+    cp = [start]
+    for p in cut_points:
+        if p > start and p < stop:
+            cp.append(p)
+    cp.append(stop)
+    cut_ranges = []
+    for i in range(0, len(cp)-1):
+        cut_ranges.append((cp[i], cp[i+1]))
+    return cut_ranges
 
-from_to = maps.keys()
-locations = []
-range1 = range(seeds[0], seeds[0] + seeds[1])
-range2 = range(seeds[2], seeds[2] + seeds[3])
+def modify_range(r, conversion_ranges):
+    for c in conversion_ranges:
+        mod = c[2]
+        if r[0] >= c[0] and r[1] <= c[1]:
+            return (r[0] + mod, r[1] + mod)
+    # if it's in none of the conversion ranges, return the unmodified range
+    return r
 
-for location in range1:
-    for key in from_to:
-        src, dest = key
-        location = (translate(location, src, dest))
-    locations.append(location)
-    # als heel range1 valt binnen 1 van de ranges in de dictionary voor deze src/dest hoef ik alleen de eerste van de range te bepalen.
+for conversion, conversion_ranges in conversions.items():
+    cut_ranges = []
+    cp = find_cut_points(conversion_ranges)
+    for s in seed_ranges:
+        cut_ranges.extend(cut_range(s, cp))
+    converted_ranges = []
+    for r in cut_ranges:
+        converted_ranges.append(modify_range(r, conversion_ranges))
+    seed_ranges = converted_ranges
 
+lowest = min([s[0] for s in seed_ranges])
 
+assert lowest = 78775051
 
-for location in range2:
-    for x in from_to:
-        src, dest = x
-        location = (translate(location, src, dest))
-    locations.append(location)
-
-print(min(locations))
