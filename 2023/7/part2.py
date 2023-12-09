@@ -52,23 +52,22 @@ for d in data:
     hands_dict[hand] = Card(hand, bid)
 
 def compare_hands(h1, h2):
-    # vergelijk eerst op type.
+    # compare by type.
     if h1.strength > h2.strength:
         return h1.hand
     elif h2.strength > h1.strength:
         return h2.hand
-    # als dat geen uitsluitsel geeft, vergelijk dan op kaartvolgorde.
+    # if that's a tie, compare by card value, starting with the first card.
     for i in range(len(hand)):
-        # als de eerste kaart sterker is in 1 van de twee, dan is dat de sterkste hand.
         if cards.index(h1.hand[i]) < cards.index(h2.hand[i]):
             return h1.hand
         elif cards.index(h2.hand[i]) < cards.index(h1.hand[i]):
             return h2.hand
-    else:
-        return
+
 
 hands = [d.split()[0] for d in data]
 bids = [d.split()[1] for d in data]
+
 
 def bubble_sort(hands):
     n = len(hands)

@@ -13,20 +13,22 @@ class Card(object):
         counts = dict()
         for c in cards:
             counts[c] = self.hand.count(c)
-        if 5 in counts.values():
+        counts = list(counts.values())
+        if 5 in counts:
             return "five_of_a_kind"
-        elif 4 in counts.values():
+        elif 4 in counts:
             return "four_of_a_kind"
-        elif 2 in counts.values() and 3 in counts.values():
+        elif 2 in counts and 3 in counts:
             return "full_house"
-        elif 3 in counts.values():
+        elif 3 in counts:
             return "three_of_a_kind"
-        elif list(counts.values()).count(2) == 2:
+        elif counts.count(2) >= 2:
             return "two_pair"
-        elif list(counts.values()).count(2) == 1:
+        elif counts.count(2) == 1:
             return "one_pair"
-        elif list(counts.values()).count(1) == 5:
+        elif counts.count(1) == 5:
             return "high_card"
+
 
     @property
     def strength(self):
@@ -50,20 +52,17 @@ for d in data:
 
 
 def compare_hands(h1, h2):
-    # vergelijk eerst op type.
+    # compare by type.
     if h1.strength > h2.strength:
         return h1.hand
     elif h2.strength > h1.strength:
         return h2.hand
-    # als dat geen uitsluitsel geeft, vergelijk dan op kaartvolgorde.
+    # if that's a tie, compare by card value, starting with the first card.
     for i in range(5):
-        # als de eerste kaart sterker is in 1 van de twee, dan is dat de sterkste hand.
         if cards.index(h1.hand[i]) < cards.index(h2.hand[i]):
             return h1.hand
         elif cards.index(h2.hand[i]) < cards.index(h1.hand[i]):
             return h2.hand
-    else:
-        return
 
 
 hands = [d.split()[0] for d in data]
