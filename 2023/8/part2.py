@@ -1,4 +1,5 @@
 import re
+from math import lcm
 
 with open("input.txt") as file:
     data = file.read()
@@ -30,6 +31,7 @@ def find_cycle(current, directions):
     # find the first occurrence of Z and record the node name
     first_z = find_first_z(current, directions)
     # for a few cycles of getting back to first_z, record how many steps it took to get there.
+    # looks like one cycle is actually enough to get the right number so we can use the first two ns to get the cycle.
     while len(numbers) < 2:
         for d in directions:
             n += 1
@@ -38,23 +40,14 @@ def find_cycle(current, directions):
                 numbers.append(n)
     return numbers[1] - numbers[0]
 
-def find_lcm(cycles):
-    from math import gcd
-    a = cycles   #will work for an int array of any length
-    lcm = 1
-    for i in a:
-        lcm = lcm*i//gcd(lcm, i)
-    return lcm
-
-
 # start nodes are all the ones that end in A
-current_nodes = [key for key in network.keys() if key.endswith("A")]
+start_nodes = [key for key in network.keys() if key.endswith("A")]
 
 cycles = []
-for node in current_nodes:
+for node in start_nodes:
     cycles.append(find_cycle(node, directions))
 
-
-result = find_lcm(cycles)
+# find the least common multiple for the list of cycles
+result = lcm(*cycles)
 
 assert result == 14935034899483
