@@ -58,7 +58,7 @@ total = sum([manhattan(c[0], c[1]) for c in combos])
 assert total == 9403026
 
 
-# part 1
+# part 2
 new_galaxies2 = [expand(g, empty_rows, empty_cols, 1000000) for g in galaxies]
 combos = list(itertools.combinations(new_galaxies2, 2))
 total = sum([manhattan(c[0], c[1]) for c in combos])
