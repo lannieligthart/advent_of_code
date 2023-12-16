@@ -5,16 +5,15 @@ with open("input.txt") as file:
 
 class Path(object):
 
-    def __init__(self, drc, row, col, data):
+    def __init__(self, drc, row, col):
         self.new_start_points = []
         self.row = row
         self.col = col
         self.drc = drc
-        self.data = data
 
     @property
     def tile(self):
-        return self.data[self.row][self.col]
+        return data[self.row][self.col]
 
     def turn(self):
         """depending on direction and content of the tile encountered, determine what the new direction should be.
@@ -38,7 +37,7 @@ class Path(object):
         elif self.drc == "R":
             c = self.col + 1
         # check if we're still on the grid.
-        if r >= 0 and c >= 0 and r < len(self.data[0]) and c < len(self.data):
+        if r >= 0 and c >= 0 and r < len(data[0]) and c < len(data):
             self.row = r
             self.col = c
             self.turn()
@@ -57,7 +56,7 @@ def update_dir(drc, tile):
 
 
 def run(start_point):
-    p = Path(*start_point, data)
+    p = Path(*start_point)
     while p.drc is not None:
         points[(p.row, p.col)] = "#"
         p.move()
