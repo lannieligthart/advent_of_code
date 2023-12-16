@@ -16,16 +16,11 @@ class Path(object):
     def tile(self):
         return self.data[self.row][self.col]
 
-    def update_dir(self):
+    def turn(self):
         """depending on direction and content of the tile encountered, determine what the new direction should be.
         If one direction, just update
         If split, set direction to none and set new paths to follow."""
-        turns = {"R": (["R"], ["U", "D"], ["R"], ["D"], ["U"]),
-                "L": (["L"], ["D", "U"], ["L"], ["U"], ["D"]),
-                "U": (["U"], ["U"], ["L", "R"], ["L"], ["R"]),
-                "D": (["D"], ["D"], ["L", "R"], ["R"], ["L"])}
-        tiles = [".", "|", "-", "\\", "/"]
-        drc = turns[self.drc][tiles.index(self.tile)]
+        drc = update_dir(self.drc, self.tile)
         if len(drc) == 1:
             self.drc = drc[0]
         elif len(drc) > 1:
@@ -46,25 +41,18 @@ class Path(object):
         if r >= 0 and c >= 0 and r < len(self.data[0]) and c < len(self.data):
             self.row = r
             self.col = c
-            self.update_dir()
+            self.turn()
         else:
             self.drc = None
 
 
-def first_turn(drc, tile):
+def update_dir(drc, tile):
     turns = {"R": (["R"], ["U", "D"], ["R"], ["D"], ["U"]),
              "L": (["L"], ["U", "D"], ["L"], ["U"], ["D"]),
              "U": (["U"], ["U"], ["L", "R"], ["L"], ["R"]),
              "D": (["D"], ["D"], ["L", "R"], ["R"], ["L"])}
-    tiles = [".", "|", "-","\\","/"]
-    if drc == "D":
-        new_drc = turns["D"][tiles.index(tile)]
-    if drc == "U":
-        new_drc = turns["U"][tiles.index(tile)]
-    if drc == "R":
-        new_drc = turns["R"][tiles.index(tile)]
-    if drc == "L":
-        new_drc = turns["L"][tiles.index(tile)]
+    tiles = [".", "|", "-", "\\", "/"]
+    new_drc = turns[drc][tiles.index(tile)]
     return new_drc
 
 
@@ -76,7 +64,7 @@ def run(start_point):
     return p.new_start_points
 
 def try_start_point(drc, row, col):
-    start_dir = first_turn(drc, data[row][col])
+    start_dir = update_dir(drc, data[row][col])
     start_points = deque()
     for sdrc in start_dir:
         start_points.append((sdrc, row, col))
@@ -93,19 +81,15 @@ def try_start_point(drc, row, col):
 
 
 start_points = []
-c_max = len(data)
-r_max = len(data[0])
 
-# rows left and right
+# rows left and right (including corners)
 for i in range(len(data)):
     start_points.append(("R", i, 0))
-for i in range(len(data)):
-    start_points.append(("L", i, c_max - 1))
-# top
-for i in range(len(data)):
+    start_points.append(("L", i, len(data) - 1))
+# top and bottom (including corners)
+for i in range(len(data[0])):
     start_points.append(("D", 0, i))
-for i in range(len(data)):
-    start_points.append(("L", r_max - 1, i))
+    start_points.append(("L", len(data[0]) - 1, i))
 
 # part 1
 start_point = ("R", 0, 0)
