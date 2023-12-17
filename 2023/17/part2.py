@@ -34,25 +34,18 @@ Potential: {self.potential}
 
     @property
     def n_straight(self):
-        last4 = self.visited[-4:]
-        last4.reverse()
-        rows = []
-        cols = []
-        for i in range(len(last4)):
-            rows.append(last4[i][0])
-            cols.append(last4[i][1])
+        """return the number of times we've moved in the same direction"""
+        last10 = list(reversed(self.visited[-11:]))
+        rows = [last10[i][0] for i in range(len(last10))]
+        cols = [last10[i][1] for i in range(len(last10))]
         n_straight_row = 0
-        for i in range(1, len(last4)):
+        for i in range(1, len(last10)):
             if rows[i] == rows[0]:
                 n_straight_row += 1
-            else:
-                break
         n_straight_col = 0
-        for i in range(1, len(last4)):
+        for i in range(1, len(last10)):
             if cols[i] == cols[0]:
                 n_straight_col += 1
-            else:
-                break
         return(max(n_straight_col, n_straight_row))
 
 
@@ -75,8 +68,13 @@ Potential: {self.potential}
             moves = [up, down, left, right]
         # keep only moves that don't make us go off grid
         moves = [x for x in moves if x[1][0] >= 0 and x[1][0] < len(self.data) and x[1][1] >= 0 and x[1][1] < len(self.data[0])]
-        # remove options that make us go straight for more than 3 times in a row
-        moves = [m for m in moves if not (m[0] == self.drc and self.n_straight == 3)]
+        # for the first move, any direction is fine
+        if len(self.visited) == 1:
+            return moves
+        # for any other moves, remove options that make us go straight for less than 4 times in a row
+        moves = [m for m in moves if not (m[0] != self.drc and self.n_straight < 4)]
+        # remove options that make us go straight for more than 10 times in a row
+        moves = [m for m in moves if not (m[0] == self.drc and self.n_straight >= 10)]
         return moves
 
     def move(self, step):
@@ -106,7 +104,6 @@ with open("input.txt") as file:
 
 data = [list(d) for d in data]
 data = [list(map(int, d)) for d in data]
-
 states = PriorityQueue()
 s = State(pos=(0, 0), data=data)
 s.visited.append((0, 0))
@@ -114,7 +111,6 @@ previous_states = dict()
 best_path = None
 min_heat_loss = 100000
 
-# voeg beginstate toe aan de queue
 states.put((len(s.visited), s))
 
 while not states.empty():
@@ -124,13 +120,11 @@ while not states.empty():
         for m in moves:
             newstate = new_state(state, m)
             # als we hiermee aankomen bij de finish checken we of dit nieuwe pad beter is dan het huidige beste pad:
-            if newstate.pos == (len(data)-1, len(data[0])-1):
+            if newstate.pos == (len(data)-1, len(data[0])-1) and newstate.n_straight >= 4:
                 # als dit pad beter is dan het huidige beste pad, vervang het huidige en vraag geen nieuwe moves meer op
                 if newstate.heat_loss < min_heat_loss:
                     min_heat_loss = newstate.heat_loss
                     best_path = newstate
-            # nog niet aangekomen, dan voegen we het nieuwe pad toe aan de queue.
-            # priority baseren op afstand van finish en heat_loss.
             else:
                 # if this state has not been seen before, add it
                 s = (newstate.pos, newstate.n_straight, newstate.drc)
@@ -146,8 +140,11 @@ while not states.empty():
                 if newstate.potential < min_heat_loss and better:
                     states.put((newstate.potential, newstate))
 
-assert best_path.heat_loss == 668
-#grid = aoc.Grid.from_list(best_path.visited)
-#grid.transpose()
-#grid.display()
+print(min_heat_loss)
+print(best_path)
+
+grid = aoc.Grid.from_list(best_path.visited)
+grid.transpose()
+grid.display()
+assert best_path.heat_loss == 788
 
