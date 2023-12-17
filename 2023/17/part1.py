@@ -1,6 +1,5 @@
 from AoC_tools import aoc22 as aoc
 from queue import PriorityQueue
-from collections import defaultdict
 
 
 class State(object):
@@ -11,7 +10,6 @@ class State(object):
         self.drc = None
         self.visited = []
         self.heat_loss = 0
-        self.n_straight = 0
 
     def __str__(self):
         return f"""Position: {self.pos}
@@ -34,6 +32,30 @@ Potential: {self.potential}
         y_max = len(self.data)
         return self.heat_loss + abs(x - x_max) + abs(y - y_max)
 
+    @property
+    def n_straight(self):
+        last4 = self.visited[-4:]
+        last4.reverse()
+        rows = []
+        cols = []
+        for i in range(len(last4)):
+            rows.append(last4[i][0])
+            cols.append(last4[i][1])
+        n_straight_row = 0
+        for i in range(1, len(last4)):
+            if rows[i] == rows[0]:
+                n_straight_row += 1
+            else:
+                break
+        n_straight_col = 0
+        for i in range(1, len(last4)):
+            if cols[i] == cols[0]:
+                n_straight_col += 1
+            else:
+                break
+        return(max(n_straight_col, n_straight_row))
+
+
     def generate_moves(self):
         # there are 3 directions to move in: left, right, straight.
         # straight is only allowed when at most two previous moves were straight.
@@ -46,62 +68,54 @@ Potential: {self.potential}
         options = {"D": [down, left, right],
                    "U": [up, left, right],
                    "L": [up, left, down],
-                   "R": [up, right, down]
-                   }
+                   "R": [up, right, down]}
         if self.drc is not None:
             moves = options[self.drc]
         else:
             moves = [up, down, left, right]
         # keep only moves that don't make us go off grid
         moves = [x for x in moves if x[1][0] >= 0 and x[1][0] < len(self.data) and x[1][1] >= 0 and x[1][1] < len(self.data[0])]
+        # remove options that make us go straight for more than 3 times in a row
         moves = [m for m in moves if not (m[0] == self.drc and self.n_straight == 3)]
         return moves
 
     def move(self, step):
         drc, pos = step
         self.pos = pos
-        # reset if necessary if we change directions
-        if self.n_straight == 3 and self.drc != drc:
-            self.n_straight = 0
-        elif self.n_straight == 3 and drc == self.drc:
-            print("het gaat niet goed!")
-        elif self.drc == drc:
-            self.n_straight += 1
-        self.drc = drc
         self.visited.append(pos)
         self.heat_loss += self.data[pos[0]][pos[1]]
+        self.drc = drc
 
 # generate a new stated based on an old one plus a new move
 def new_state(oldstate, move):
-    #oldstate.move(move)
     data = oldstate.data
     drc = oldstate.drc
     pos = oldstate.pos
-    n_straight = oldstate.n_straight
     visited = oldstate.visited.copy()
     heat_loss = oldstate.heat_loss
     newstate = State(pos, data)
     newstate.heat_loss = heat_loss
     newstate.drc = drc
     newstate.visited = visited
-    newstate.n_straight = n_straight
     newstate.move(move)
     return newstate
 
 previous_states = dict()
 
-with open("testinput.txt") as file:
+with open("input.txt") as file:
     data = file.read().split("\n")
 
 data = [list(d) for d in data]
 data = [list(map(int, d)) for d in data]
 grid = aoc.Grid.read(data)
+#grid.display()
 finish = (grid.x_max, grid.y_max)
 
 states = PriorityQueue()
 
 # maak beginstate aan. Richting kan D of R zijn, maakt niet uit (maakt wel uit voor bepalen wat de volgende stap mag zijn!.
 s = State(pos=(0, 0), data=data)
+s.visited.append((0, 0))
 
 # voeg beginstate toe aan de queue
 states.put((len(s.visited), s))
@@ -114,9 +128,7 @@ while not states.empty():
     moves = state.generate_moves()
     if len(moves) > 0:
         for m in moves:
-            #print(state)
             newstate = new_state(state, m)
-            #print(newstate)
             # als we hiermee aankomen bij de finish checken we of dit nieuwe pad beter is dan het huidige beste pad:
             if newstate.pos == finish:
                 # als dit pad beter is dan het huidige beste pad, vervang het huidige en vraag geen nieuwe moves meer op
@@ -141,16 +153,13 @@ while not states.empty():
                 # als de best mogelijke uitkomst kleiner is dan het nu beste resultaat, laat hem dan door
                 if newstate.potential < min_heat_loss and better:
                     states.put((newstate.potential, newstate))
-                # if states.qsize() % 10 == 0:
-                #     print(states.qsize())
-            #max_heat_loss = newstate.heat_loss/len(newstate.visited)
-
 
 print(min_heat_loss)
 print(best_path)
 
-
-
+assert best_path.heat_loss == 668
 grid = aoc.Grid.from_list(best_path.visited)
-grid.transpose()
-grid.display()
+#grid.transpose()
+#grid.display()
+
+# 667 too low
