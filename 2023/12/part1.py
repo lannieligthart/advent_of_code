@@ -1,4 +1,5 @@
 from AoC_tools import aoc22 as aoc
+import functools
 
 start = aoc.start()
 
@@ -8,17 +9,24 @@ import itertools
 with open("input.txt") as file:
     data = file.read().split("\n")
 
+global lookup
+#lookup = dict()
 
 # per group, figure out where it might go.
-def check_fit(length, string, pos):
+#@functools.cache
+def check_fit(n, string):
     fit = True
+    len_s = len(string)
+    # # if already in lookup, it's easy
+    # if (string, n) in lookup:
+    #     return lookup[(string, n)]
     # als op een van de beoogde posities een . staat, past het niet
-    if "." in string[pos:pos + length]:
+    if "." in string[0:n]:
         fit = False
-    if pos > 0 and string[pos - 1] == "#":
-        fit = False
-    if pos < len(string) - length and string[pos + length] == "#":
-        fit = False
+    if len_s >= n + 1:
+        if string[n] == "#":
+            fit = False
+    #lookup[(string, n)] = fit
     return fit
 
 def get_possible_locations(group_len, string):
@@ -28,12 +36,10 @@ def get_possible_locations(group_len, string):
     """
     locations = []
     # loop de string af
-    for i in range(0, len(string) - group_len + 1) :
-        possible = True
+    for i in range(0, len(string) - group_len + 1):
+        substr = string[i: i + group_len + 1]
         # op elke plek in de string, voor n vanaf string[i], kijk of er een . staat. Zo ja, dan is deze positie niet mogelijk.
-        if not check_fit(group_len, string, i):
-            possible = False
-        if possible:
+        if check_fit(group_len, substr):
             locations.append(i)
     return locations
 
@@ -51,7 +57,7 @@ def get_options(options, lengths):
     combos = list(itertools.product(*options))
     possible = []
     for c in combos:
-        result = check_combo(c, lengths)
+        result = check_combo(c, tuple(lengths))
         if result:
             possible.append(c)
     return possible
@@ -73,15 +79,16 @@ def check_options(combos, lengths, string):
 total = 0
 for i, d in enumerate(data):
     string, group_sizes = d.split()
-    group_sizes = list(map(int, group_sizes.split(",")))
+    group_sizes = tuple(map(int, group_sizes.split(",")))
     possible_locations = []
     # get possible locations for each group length
     for n in group_sizes:
         possible_locations.append(get_possible_locations(n, string))
     # check if locations would fit based on length
-    options = get_options(possible_locations, group_sizes)
+    options = tuple(get_options(possible_locations, group_sizes))
     # check if no hashes remain uncovered given this layout
     options = check_options(options, group_sizes, string)
+    print(len(options))
     total += len(options)
 
 print(total)
