@@ -46,6 +46,7 @@ def process_wf(wf, part):
         if result is None:
             pass
         else:
+            # indien geen accept of reject, dan return je de next workflow
             return result
 
 
@@ -71,3 +72,4 @@ for part in partslist:
 print(total)
 
 assert total == 495298
+
