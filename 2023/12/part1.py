@@ -1,5 +1,4 @@
 from AoC_tools import aoc22 as aoc
-import functools
 
 start = aoc.start()
 
@@ -9,24 +8,16 @@ import itertools
 with open("input.txt") as file:
     data = file.read().split("\n")
 
-global lookup
-#lookup = dict()
-
 # per group, figure out where it might go.
-#@functools.cache
 def check_fit(n, string):
     fit = True
     len_s = len(string)
-    # # if already in lookup, it's easy
-    # if (string, n) in lookup:
-    #     return lookup[(string, n)]
     # als op een van de beoogde posities een . staat, past het niet
     if "." in string[0:n]:
         fit = False
     if len_s >= n + 1:
         if string[n] == "#":
             fit = False
-    #lookup[(string, n)] = fit
     return fit
 
 def get_possible_locations(group_len, string):
@@ -91,8 +82,6 @@ for i, d in enumerate(data):
     print(len(options))
     total += len(options)
 
-print(total)
-#assert total == 7173
+assert total == 7173
 
 aoc.end(start)
-# 51 sec.
