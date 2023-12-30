@@ -20,21 +20,16 @@ for d in data:
             r += 1
         visited.append((r, c))
 
-
-# avoid issues with negative indices by adjusting the y axis
-visited = [(v[0] + 144, v[1]) for v in visited ]
-
 #bepaal de min en max van visited
 r_min = min([v[0] for v in visited])
-r_max = max([v[0] for v in visited])
 c_min = min([v[1] for v in visited])
 c_max = max([v[1] for v in visited])
 
-print(r_min, r_max, c_min, c_max)
+# avoid issues with negative indices by adjusting the y axis
+visited = [(v[0] - r_min, v[1] - c_min) for v in visited ]
 
 grid = aoc.Grid.from_list(visited)
 grid.transpose()
-grid.display()
 
 # add points to the empty positions
 for x in range(grid.x_min, grid.x_max + 1):
@@ -59,7 +54,6 @@ def make_grid_from_dict(dictionary):
 values = grid.values
 matrix = make_grid_from_dict(values)
 matrix = aoc.transpose(matrix)
-aoc.lprint(matrix)
 
 # add margin
 matrix.append(["." for x in range(c_max + 1)])
@@ -69,7 +63,6 @@ for row in matrix:
 for row in matrix:
     row.append(".")
 
-#aoc.lprint(matrix)
 
 def on_grid(matrix, pos):
     r, c = pos
@@ -98,10 +91,6 @@ def flood_fill(data, r, c):
     return data
 
 result = flood_fill(matrix, 0, 0)
-aoc.lprint(result)
-
-grid = aoc.Grid.read(result)
-grid.display()
 
 xcount = 0
 for i in range(len(matrix)):
