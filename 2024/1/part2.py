@@ -1,10 +1,8 @@
 with open("input.txt") as f:
-    data = f.read().split("\n")
+    data = [list(map(int, line.split())) for line in f]
 
-data = [d.split() for d in data]
-
-l1 = [int(d[0]) for d in data]
-l2 = [int(d[1]) for d in data]
+# separate the two lists
+l1, l2 = zip(*data)
 
 def count_occ(n, l):
     total = 0
