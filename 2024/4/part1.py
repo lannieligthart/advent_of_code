@@ -4,146 +4,31 @@ infile = "input.txt"
 with open(infile) as f:
     data = f.read().split("\n")
 
-print(data)
+def check_word(data, r, c, inc_r, inc_c):
+    try:
+        word = data[r][c] + data[r + inc_r][c + inc_c] + data[r + 2*inc_r][c + 2*inc_c] + data[r + 3*inc_r][c + 3*inc_c]
+        if word in ["XMAS", "SAMX"] and r + 3*inc_r >= 0 and c + 3*inc_c >= 0:
+            return 1
+        else:
+            return 0
+    except IndexError:
+        return 0
+
+# check all directions
 
 total = 0
 
-# test alle richtingen.
-def horizontal(data):
-    total = 0
-    for r in range(len(data)):
-        for c in range(len(data[0])):
-            try:
-                word = ''
-                word += data[r][c]
-                word += data[r][c+1]
-                word += data[r][c+2]
-                word += data[r][c+3]
-                #print(word)
-                if word == "XMAS" and len(data) > r >= 0 and len(data) > c+3 >= 0:
-                    print(r, c)
-                    total += 1
-            except IndexError:
-                pass
-    for r in range(len(data)):
-        for c in range(len(data[0])):
-            try:
-                word = ''
-                word += data[r][c]
-                word += data[r][c-1]
-                word += data[r][c-2]
-                word += data[r][c-3]
-                #print(word)
-                if word == "XMAS" and len(data) > r >= 0 and len(data) > c-3 >= 0:
-                    print(r, c)
-                    total += 1
-            except IndexError:
-                pass
-    print(f"horizontal: {total}")
-    return total
+for r in range(len(data)):
+    for c in range(len(data[0])):
+        # horizontal
+        total += check_word(data, r, c, inc_r=0, inc_c=1)
+        # vertical
+        total += check_word(data, r, c, inc_r=1, inc_c=0)
+        # diagonal
+        total += check_word(data, r, c, inc_r=1, inc_c=1)
+        total += check_word(data, r, c, inc_r=-1, inc_c=1)
 
-
-def vertical(data):
-    total = 0
-    for r in range(len(data)):
-        for c in range(len(data[0])):
-            try:
-                word = ''
-                word += data[r][c]
-                word += data[r+1][c]
-                word += data[r+2][c]
-                word += data[r+3][c]
-                #print(word)
-                if word == "XMAS" and len(data) > r+3 >= 0 and len(data) > c >= 0:
-                    print(r, c)
-                    total += 1
-            except IndexError:
-                pass
-    for r in range(len(data)):
-        for c in range(len(data[0])):
-            try:
-                word = ''
-                word += data[r][c]
-                word += data[r-1][c]
-                word += data[r-2][c]
-                word += data[r-3][c]
-                #print(word)
-                if word == "XMAS" and len(data) > r-3 >= 0 and len(data) > c >= 0:
-                    print(r, c)
-                    total += 1
-            except IndexError:
-                pass
-    print(f"vertical: {total}")
-    return total
-
-def diagonal(data):
-    total = 0
-    print("rechts omlaag")
-    for r in range(len(data)):
-        for c in range(len(data[0])):
-            try:
-                word = ''
-                word += data[r][c]
-                word += data[r+1][c+1]
-                word += data[r+2][c+2]
-                word += data[r+3][c+3]
-                #print(word)
-                if word == "XMAS" and len(data) > r+3 >= 0 and len(data) > c+3 >= 0:
-                    print(r, c)
-                    total += 1
-            except IndexError:
-                pass
-    print("links omhoog")
-    for r in range(len(data)):
-        for c in range(len(data[0])):
-            try:
-                word = ''
-                word += data[r][c]
-                word += data[r-1][c-1]
-                word += data[r-2][c-2]
-                word += data[r-3][c-3]
-                #print(word)
-                if word == "XMAS" and len(data) > r-3 >= 0 and len(data) > c-3 >= 0:
-                    print(r, c)
-                    total += 1
-            except IndexError:
-                pass
-
-    print("links omlaag")
-    for r in range(len(data)):
-        for c in range(len(data[0])):
-            try:
-                word = ''
-                word += data[r][c]
-                word += data[r+1][c-1]
-                word += data[r+2][c-2]
-                word += data[r+3][c-3]
-                #print(word)
-                if word == "XMAS" and len(data) > r+3 >= 0 and len(data) > c-3 >= 0:
-                    print(r, c)
-                    total += 1
-            except IndexError:
-                pass
-    print("rechts omhoog")
-    for r in range(len(data)):
-        for c in range(len(data[0])):
-            try:
-                word = ''
-                word += data[r][c]
-                word += data[r-1][c+1]
-                word += data[r-2][c+2]
-                word += data[r-3][c+3]
-                #print(word)
-                if word == "XMAS" and len(data) >= r-3 >= 0 and len(data) > c+3 >= 0:
-                    print(r, c)
-                    total += 1
-            except IndexError:
-                pass
-    print(f"diagonal: {total}")
-    return total
-
-total += horizontal(data)
-total += vertical(data)
-total += diagonal(data)
 print(total)
+
+assert total == 2613
 
