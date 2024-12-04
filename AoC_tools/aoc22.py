@@ -4,7 +4,7 @@ import time
 
 # import AoC_tools.aoc_tools as aoc
 
-aocdir = "C:/Users/lanni/Code/advent_of_code"
+ aocdir = "C:/Users/rlt700/OneDrive - Vrije Universiteit Amsterdam/Code/advent_of_code"
 
 
 def lprint(list):
@@ -76,6 +76,48 @@ def pad(str, n):
     dif = n - len(str)
     prefix = " "*dif
     return prefix + str
+
+def find_cycle(seq, minlen=2):
+    """detects repetitive patterns in a sequence and returns the period. When there's an offset, it will
+    only detect the pattern if start_pos > offset.
+    minlen is the minimum length the repeat should have (in case there are shorter repetitive patterns in the offset
+    range).
+    NB: scans only the first detected repeat!"""
+    def findperiod(seq, offset, minlen):
+        for length in range(minlen, len(seq)):
+            rep = seq[offset:length + offset]
+            if seq[length + offset: 2*length + offset] == rep and seq[2*length + offset: 3*length + offset] == rep:
+                return length
+
+    for offset in range(100):
+        period = findperiod(seq, offset, minlen)
+        if period is not None:
+            break
+    return(period, offset)
+
+def transpose(lol):
+    return list(map(list, zip(*lol)))
+
+def get_nb(pos):
+    r, c = pos
+    return [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]
+
+def flood_fill(data, r, c):
+    """takes a matrix and a start position, returns filled up matrix"""
+    done = set()
+    queue = [(r, c)]
+    while len(queue) > 0:
+        r, c = queue.pop(0)
+        if data[r][c] != "#" and (r, c) not in done:
+            data[r][c] = "X"
+            done.add((r, c))
+        nb = aoc.get_nb((r, c))
+        # if these neigbours are on the grid, not in done, and not a "#" convert them and add their neighbours to the queue
+        for n in nb:
+            if on_grid(data, n) and data[r][c] != "#" and n not in queue and n not in done:
+                queue.append(n)
+    return data
+
 
 class Point(object):
 
@@ -230,7 +272,7 @@ class Grid(object):
         elif isinstance(data, list):
             # if the elements of the lists are not lists themselves, split them up into lists.
             if isinstance(data[0], str):
-                data = [row.split(colsep) for row in data]
+                data = [list(row) for row in data]
         # rows
         nrows = len(data)
         ncols = len(data[0])
