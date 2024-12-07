@@ -1,30 +1,28 @@
-infile = "testinput.txt"
-#infile = "input.txt"
+from AoC_tools import aoc24 as aoc
+
+s = aoc.start()
+
+#infile = "testinput.txt"
+infile = "input.txt"
 
 with open(infile) as f:
     data = f.readlines()
 
-print(f"rows:{len(data)}")
-print(f"cols:{len(data[0])}")
+nrows = len(data)
+ncols = len(data[0])
 
-for c in range(len(data)-1):
-    for r in range(len(data[0])-1):
+for c in range(ncols-1):
+    for r in range(nrows-1):
         if data[r][c] == "^":
-            curpos = (r,c)
-
-print(f"start position: {curpos}")
+            start_pos = (r, c)
 
 directions = ["N", "E", "S", "W"]
+move_dir = {"N": (-1, 0), "S": (1, 0), "E": (0, 1), "W": (0, -1)}
 
-move_dir = {"N": (-1, 0),
-            "S": (1, 0),
-            "E": (0, 1),
-            "W": (0, -1)}
-
-visited = [curpos]
+visited = [start_pos]
 direction = 0
 
-r, c = curpos
+r, c = start_pos
 
 while True:
     old = (r, c)
@@ -35,20 +33,27 @@ while True:
         break
     if data[r][c] != "#":
         visited.append((r,c))
-        #print(r, c)
-        #print(visited)
     elif data[r][c] == "#":
+        # we can't go here so reset position to the previous one
         r, c = old
+        # turn right, and note we have only 4 possible directions
         direction += 1
         direction = direction % 4
         print(f"current position: ({r, c})")
         print(f"turning {directions[direction]}")
 
-print(visited)
 visited = list(set(visited))
+print(visited)
 print(len(visited))
 
 
 #4434 klopt niet
 #4433 is het juiste antwoord?
+if infile == "testinput.txt":
+    assert len(visited) == 41
+
+if infile == "input.txt":
+    assert len(visited) == 4433
+
+aoc.end(s)
 

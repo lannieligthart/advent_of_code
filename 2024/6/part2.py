@@ -1,3 +1,7 @@
+from AoC_tools import aoc24 as aoc
+
+s = aoc.start()
+
 #infile = "testinput.txt"
 infile = "input.txt"
 
@@ -8,26 +12,17 @@ data = [list(d) for d in data]
 
 nrows = len(data)
 ncols = len(data[0])
-print(f"rows:{nrows}")
-print(f"cols:{ncols}")
 
 for c in range(ncols-1):
     for r in range(nrows-1):
         if data[r][c] == "^":
             start_pos = (r, c)
 
-print(f"start position: {start_pos}")
-
 directions = ["N", "E", "S", "W"]
 
-move_dir = {"N": (-1, 0),
-            "S": (1, 0),
-            "E": (0, 1),
-            "W": (0, -1)}
+move_dir = {"N": (-1, 0), "S": (1, 0), "E": (0, 1), "W": (0, -1)}
 
-
-
-def run(data, start_pos, nrows, ncols):
+def run(data, start_pos, nrows, ncols, first_run=False):
     direction = 0
     visited = [(start_pos, direction)]
     r, c = start_pos
@@ -42,39 +37,36 @@ def run(data, start_pos, nrows, ncols):
             if ((r, c), direction) in visited:
                 return "loop"
             else:
-                visited.append(((r,c), direction))
+                # only in the first run, record all non-turning positions
+                if first_run:
+                    visited.append(((r,c), direction))
 
         elif data[r][c] == "#":
             r, c = old
+            # in all runs, record the turning positions
+            visited.append(((r,c), direction))
             direction += 1
             direction = direction % 4
-            #print(f"current position: ({r, c})")
-            #print(f"turning {directions[direction]}")
     return visited
 
-loops = []
+loops = set()
 
-visited = run(data, start_pos, nrows, ncols)
+# at first run, record all positions we know where we should place obstacles
+visited = run(data, start_pos, nrows, ncols, first_run=True)
 
 # place obstacles
 for v in visited:
     row, col = v[0]
     if data[row][col] != "#":
         data_mod = [d.copy() for d in data]
-        if col % 50 == 0 and row % 10 == 0:
-            print(f"modifying ({row, col})")
         data_mod[row][col] = "#"
         if run(data_mod, start_pos, nrows, ncols) == "loop":
             print(f"found loop at ({row},{col})")
-            loops.append((row, col))
+            loops.add((row, col))
 
-loops = list(set(loops))
-print(loops)
-print(len(loops))
+if infile == "input.txt":
+    assert len(loops) == 1516
+if infile == "testinput.txt":
+    assert len(loops) == 6
 
-# row, col = [6,3]
-# row, col = [7,6]
-# row, col = [7,7]
-# row, col = [8,1]
-# row, col = [8,3]
-# row, col = [9,7]
+aoc.end(s)
