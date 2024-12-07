@@ -6,7 +6,9 @@ s = aoc.start()
 infile = "input.txt"
 
 with open(infile) as f:
-    data = f.readlines()
+    data = f.read().split("\n")
+
+data = [list(d) for d in data]
 
 nrows = len(data)
 ncols = len(data[0])
@@ -19,7 +21,8 @@ for c in range(ncols-1):
 directions = ["N", "E", "S", "W"]
 move_dir = {"N": (-1, 0), "S": (1, 0), "E": (0, 1), "W": (0, -1)}
 
-visited = [start_pos]
+visited = set()
+visited.add(start_pos)
 direction = 0
 
 r, c = start_pos
@@ -31,8 +34,9 @@ while True:
     # if the guard has left the map, stop
     if r < 0 or r >= len(data) or c < 0 or c >= len(data[0]):
         break
-    if data[r][c] != "#":
-        visited.append((r,c))
+    elif data[r][c] != "#":
+        visited.add((r,c))
+        data[r][c] = "X"
     elif data[r][c] == "#":
         # we can't go here so reset position to the previous one
         r, c = old
@@ -43,12 +47,10 @@ while True:
         print(f"turning {directions[direction]}")
 
 visited = list(set(visited))
-print(visited)
-print(len(visited))
 
+# for d in data:
+#     print("".join(d))
 
-#4434 klopt niet
-#4433 is het juiste antwoord?
 if infile == "testinput.txt":
     assert len(visited) == 41
 
