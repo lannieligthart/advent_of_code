@@ -1,8 +1,8 @@
-from AoC_tools import aoc22 as aoc
+from AoC_tools import aoc24 as aoc
 import itertools
 
 s = aoc.start()
-infile = "testinput.txt"
+#infile = "testinput.txt"
 infile = "input.txt"
 
 with open(infile) as f:
@@ -34,14 +34,5 @@ for key, value in eq.items():
             total += key
             break
 
-print(total)
 
-if infile == "testinput.txt":
-    assert total == 3749
-
-if infile == "input.txt":
-    assert total == 932137732557
-
-
-print(aoc.end(s))
-
+aoc.check_result(infile, total, 3749, 932137732557, s)
